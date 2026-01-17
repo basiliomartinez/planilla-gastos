@@ -1,16 +1,81 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+# 🧮 Planilla de Gastos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Aplicación web desarrollada en React para llevar el control de gastos mensuales de forma simple, visual y práctica, con una estética tipo calculadora en modo oscuro.
 
-## React Compiler
+Permite registrar gastos, visualizar el total pendiente, marcar gastos como pagados y mantener un historial ordenado.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 📌 1. Descripción del proyecto
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+La Planilla de Gastos permite:
+
+* Agregar gastos con:
+
+  * Nombre
+  * Monto en pesos (con separador de miles)
+  * Fecha de vencimiento (calendario desplegable)
+* Visualizar un display principal con el total pendiente
+* Marcar gastos como “A pagar”
+* Mover gastos a una sección de Pagados
+* Mostrar fecha de pago
+* Eliminar gastos pagados del historial
+* Identificar gastos vencidos
+* Persistir la información usando localStorage
+
+El diseño está pensado para un uso cotidiano, con foco en claridad y experiencia de usuario.
+
+---
+
+## 🛠️ 2. Tecnologías utilizadas
+
+* React
+* Vite
+* JavaScript
+* React-Bootstrap
+* Bootstrap
+* CSS personalizado
+* LocalStorage
+
+---
+
+## 🔗 3. Repositorio
+
+Repositorio en GitHub:
+(pegá acá el link de tu repo)
+
+https://github.com/basiliomartinez/planilla-gastos
+
+---
+
+## ▶️ 4. Cómo usar el proyecto en VS Code
+
+Paso a paso:
+
+1. Clonar el repositorio
+   git clone https://github.com/basiliomartinez/planilla-gastos
+
+2. Entrar al proyecto
+   cd planilla-gastos
+
+3. Instalar dependencias
+   npm install
+
+4. Levantar el servidor de desarrollo
+   npm run dev
+
+5. Abrir en el navegador
+   [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 👤 5. Autor
+
+Basilio Martínez
+
+Proyecto desarrollado como práctica de React, manejo de estado y experiencia de usuario, orientado a un uso real y cotidiano.
+
+---
