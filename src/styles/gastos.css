@@ -149,3 +149,11 @@
   color: #c3c5c9 !important; /* gris claro visible */
   opacity: 0.9;
 }
+.calc-display .btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.calc-display .btn-outline-light:hover {
+  border-color: rgba(255, 255, 255, 0.45);
+}
