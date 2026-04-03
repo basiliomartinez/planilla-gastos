@@ -2,37 +2,45 @@ import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import FormularioGasto from "./components/FormularioGasto";
 import ListaGastos from "./components/ListaGastos";
+import {
+  listarGastosApi,
+  crearGastoApi,
+  pagarGastoApi,
+  eliminarGastoApi,
+} from "./helpers/queries";
 import "./styles/gastos.css";
 
 const App = () => {
-  // ===== LocalStorage =====
-  const pendientesLS =
-    JSON.parse(localStorage.getItem("GastosPendientes")) || [];
-  const pagadosLS =
-    JSON.parse(localStorage.getItem("GastosPagados")) || [];
+  const [gastosPendientes, setGastosPendientes] = useState([]);
+  const [gastosPagados, setGastosPagados] = useState([]);
 
-  const [gastosPendientes, setGastosPendientes] = useState(pendientesLS);
-  const [gastosPagados, setGastosPagados] = useState(pagadosLS);
-
+  // ===== CARGAR GASTOS DESDE EL BACKEND =====
   useEffect(() => {
-    localStorage.setItem(
-      "GastosPendientes",
-      JSON.stringify(gastosPendientes)
-    );
-  }, [gastosPendientes]);
+    const cargarGastos = async () => {
+      try {
+        const data = await listarGastosApi();
 
-  useEffect(() => {
-    localStorage.setItem("GastosPagados", JSON.stringify(gastosPagados));
-  }, [gastosPagados]);
+        const pendientes = data.filter((g) => g.estado === "pendiente");
+        const pagados = data.filter((g) => g.estado === "pagado");
 
-  // ===== TOTAL PENDIENTE (único dato clave) =====
+        setGastosPendientes(pendientes);
+        setGastosPagados(pagados);
+      } catch (error) {
+        console.error("Error al cargar los gastos:", error);
+      }
+    };
+
+    cargarGastos();
+  }, []);
+
+  // ===== TOTAL PENDIENTE =====
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
     0
   );
 
-  // ===== AGREGAR GASTO (con validación duplicados) =====
-  const agregarGasto = (nuevoGasto) => {
+  // ===== AGREGAR GASTO =====
+  const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
       (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
     );
@@ -48,13 +56,30 @@ const App = () => {
       };
     }
 
-    setGastosPendientes([...gastosPendientes, nuevoGasto]);
-    return { ok: true };
+    try {
+      const resp = await crearGastoApi(nuevoGasto);
+
+      if (resp.gasto) {
+        setGastosPendientes([...gastosPendientes, resp.gasto]);
+        return { ok: true };
+      }
+
+      return {
+        ok: false,
+        msg: "No se pudo crear el gasto.",
+      };
+    } catch (error) {
+      console.error("Error al crear el gasto:", error);
+      return {
+        ok: false,
+        msg: "Ocurrió un error al crear el gasto.",
+      };
+    }
   };
 
   // ===== MARCAR COMO PAGADO =====
-  const marcarComoPagado = (id) => {
-    const gasto = gastosPendientes.find((g) => g.id === id);
+  const marcarComoPagado = async (id) => {
+    const gasto = gastosPendientes.find((g) => g._id === id);
     if (!gasto) return;
 
     const confirmar = window.confirm(
@@ -64,15 +89,21 @@ const App = () => {
     );
     if (!confirmar) return;
 
-    const fechaPago = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    try {
+      const resp = await pagarGastoApi(id);
 
-    setGastosPendientes(gastosPendientes.filter((g) => g.id !== id));
-    setGastosPagados([{ ...gasto, fechaPago }, ...gastosPagados]);
+      if (!resp.gasto) return;
+
+      setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+      setGastosPagados([resp.gasto, ...gastosPagados]);
+    } catch (error) {
+      console.error("Error al pagar el gasto:", error);
+    }
   };
 
-  // ===== ELIMINAR PAGADO (historial) =====
-  const eliminarPagado = (id) => {
-    const gasto = gastosPagados.find((g) => g.id === id);
+  // ===== ELIMINAR PAGADO =====
+  const eliminarPagado = async (id) => {
+    const gasto = gastosPagados.find((g) => g._id === id);
     if (!gasto) return;
 
     const confirmar = window.confirm(
@@ -80,7 +111,15 @@ const App = () => {
     );
     if (!confirmar) return;
 
-    setGastosPagados(gastosPagados.filter((g) => g.id !== id));
+    try {
+      const resp = await eliminarGastoApi(id);
+
+      if (!resp.gasto) return;
+
+      setGastosPagados(gastosPagados.filter((g) => g._id !== id));
+    } catch (error) {
+      console.error("Error al eliminar el gasto:", error);
+    }
   };
 
   return (
@@ -88,7 +127,7 @@ const App = () => {
       <Container>
         <div className="calc-shell">
           <div className="card calc-card">
-            {/* ===== DISPLAY SUPERIOR (calculadora) ===== */}
+            {/* ===== DISPLAY SUPERIOR ===== */}
             <div className="calc-display">
               <p className="calc-title">Planilla de Gastos</p>
 
@@ -105,7 +144,6 @@ const App = () => {
             <div className="calc-body">
               <FormularioGasto agregarGasto={agregarGasto} />
 
-              {/* Pendientes */}
               <h2 className="section-title">Pendientes</h2>
               <div className="list-soft">
                 <ListaGastos
@@ -116,7 +154,6 @@ const App = () => {
                 />
               </div>
 
-              {/* Pagados */}
               <div className="paid-block">
                 <h2 className="section-title">Pagados</h2>
                 <div className="list-soft">
@@ -129,7 +166,6 @@ const App = () => {
                 </div>
               </div>
             </div>
-            {/* FIN BODY */}
           </div>
         </div>
       </Container>
