@@ -20,8 +20,7 @@ const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion }) => {
 
   return (
     <section>
-     {titulo && <h2 className="h4 mb-3">{titulo}</h2>}
-
+      {titulo && <h2 className="h4 mb-3">{titulo}</h2>}
 
       {gastosOrdenados.length === 0 ? (
         <Alert variant="info">No hay gastos en esta sección.</Alert>
@@ -29,7 +28,7 @@ const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion }) => {
         <ListGroup>
           {gastosOrdenados.map((gasto) => (
             <ItemGasto
-              key={gasto.id}
+              key={gasto._id}
               gasto={gasto}
               tipo={tipo}
               onAccion={onAccion}

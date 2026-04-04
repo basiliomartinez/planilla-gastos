@@ -2,33 +2,42 @@ import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import FormularioGasto from "./components/FormularioGasto";
 import ListaGastos from "./components/ListaGastos";
+import {
+  listarGastosApi,
+  crearGastoApi,
+  pagarGastoApi,
+  eliminarGastoApi,
+} from "./helpers/queries";
 import "./styles/gastos.css";
 
 const App = () => {
-  // ===== LocalStorage =====
-  const pendientesLS =
-    JSON.parse(localStorage.getItem("GastosPendientes")) || [];
-  const pagadosLS = JSON.parse(localStorage.getItem("GastosPagados")) || [];
-
-  const [gastosPendientes, setGastosPendientes] = useState(pendientesLS);
-  const [gastosPagados, setGastosPagados] = useState(pagadosLS);
+  const [gastosPendientes, setGastosPendientes] = useState([]);
+  const [gastosPagados, setGastosPagados] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("GastosPendientes", JSON.stringify(gastosPendientes));
-  }, [gastosPendientes]);
+    const cargarGastos = async () => {
+      try {
+        const data = await listarGastosApi();
 
-  useEffect(() => {
-    localStorage.setItem("GastosPagados", JSON.stringify(gastosPagados));
-  }, [gastosPagados]);
+        const pendientes = data.filter((g) => g.estado === "pendiente");
+        const pagados = data.filter((g) => g.estado === "pagado");
 
-  // ===== TOTAL PENDIENTE =====
+        setGastosPendientes(pendientes);
+        setGastosPagados(pagados);
+      } catch (error) {
+        console.error("Error al cargar los gastos:", error);
+      }
+    };
+
+    cargarGastos();
+  }, []);
+
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
     0
   );
 
-  // ===== AGREGAR GASTO (validación duplicados) =====
-  const agregarGasto = (nuevoGasto) => {
+  const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
       (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
     );
@@ -44,13 +53,29 @@ const App = () => {
       };
     }
 
-    setGastosPendientes([...gastosPendientes, nuevoGasto]);
-    return { ok: true };
+    try {
+      const resp = await crearGastoApi(nuevoGasto);
+
+      if (resp.gasto) {
+        setGastosPendientes([...gastosPendientes, resp.gasto]);
+        return { ok: true };
+      }
+
+      return {
+        ok: false,
+        msg: "No se pudo crear el gasto.",
+      };
+    } catch (error) {
+      console.error("Error al crear el gasto:", error);
+      return {
+        ok: false,
+        msg: "Ocurrió un error al crear el gasto.",
+      };
+    }
   };
 
-  // ===== MARCAR COMO PAGADO =====
-  const marcarComoPagado = (id) => {
-    const gasto = gastosPendientes.find((g) => g.id === id);
+  const marcarComoPagado = async (id) => {
+    const gasto = gastosPendientes.find((g) => g._id === id);
     if (!gasto) return;
 
     const confirmar = window.confirm(
@@ -60,15 +85,20 @@ const App = () => {
     );
     if (!confirmar) return;
 
-    const fechaPago = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    try {
+      const resp = await pagarGastoApi(id);
 
-    setGastosPendientes(gastosPendientes.filter((g) => g.id !== id));
-    setGastosPagados([{ ...gasto, fechaPago }, ...gastosPagados]);
+      if (!resp.gasto) return;
+
+      setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+      setGastosPagados([resp.gasto, ...gastosPagados]);
+    } catch (error) {
+      console.error("Error al pagar el gasto:", error);
+    }
   };
 
-  // ===== ELIMINAR PAGADO (historial) =====
-  const eliminarPagado = (id) => {
-    const gasto = gastosPagados.find((g) => g.id === id);
+  const eliminarPagado = async (id) => {
+    const gasto = gastosPagados.find((g) => g._id === id);
     if (!gasto) return;
 
     const confirmar = window.confirm(
@@ -76,73 +106,15 @@ const App = () => {
     );
     if (!confirmar) return;
 
-    setGastosPagados(gastosPagados.filter((g) => g.id !== id));
-  };
+    try {
+      const resp = await eliminarGastoApi(id);
 
-  // ===== EXPORTAR / IMPORTAR (pendientes + pagados) =====
-  const exportarDatos = () => {
-    const data = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      pendientes: gastosPendientes,
-      pagados: gastosPagados,
-    };
+      if (!resp.gasto) return;
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-
-    const fecha = new Date().toISOString().slice(0, 10);
-    a.download = `planilla-gastos_${fecha}.json`;
-
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const importarDatos = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-
-        const pendientes = Array.isArray(parsed.pendientes)
-          ? parsed.pendientes
-          : null;
-        const pagados = Array.isArray(parsed.pagados) ? parsed.pagados : null;
-
-        if (!pendientes || !pagados) {
-          alert("El archivo no tiene el formato correcto (pendientes/pagados).");
-          return;
-        }
-
-        const confirmar = window.confirm(
-          "Esto reemplazará tus datos actuales. ¿Querés continuar?"
-        );
-        if (!confirmar) return;
-
-        setGastosPendientes(pendientes);
-        setGastosPagados(pagados);
-
-        alert("Datos importados correctamente ✅");
-      } catch (error) {
-        alert("No se pudo leer el archivo. Asegurate de subir un JSON válido.");
-      } finally {
-        // permite volver a importar el mismo archivo
-        event.target.value = "";
-      }
-    };
-
-    reader.readAsText(file);
+      setGastosPagados(gastosPagados.filter((g) => g._id !== id));
+    } catch (error) {
+      console.error("Error al eliminar el gasto:", error);
+    }
   };
 
   return (
@@ -150,9 +122,8 @@ const App = () => {
       <Container>
         <div className="calc-shell">
           <div className="card calc-card">
-            {/* ===== DISPLAY SUPERIOR (calculadora) ===== */}
             <div className="calc-display">
-              <p className="calc-title">Planilla de gastos</p>
+              <p className="calc-title">Planilla de Gastos</p>
 
               <p className="calc-amount">
                 ${totalPendiente.toLocaleString("es-AR")}
@@ -161,36 +132,11 @@ const App = () => {
               <div className="calc-sub">
                 {gastosPendientes.length} gasto(s) pendientes
               </div>
-
-              {/* Exportar / Importar */}
-              <div className="d-flex gap-2 mt-3 flex-wrap">
-                <button
-                  className="btn btn-outline-light btn-sm"
-                  onClick={exportarDatos}
-                >
-                  Exportar
-                </button>
-
-                <label
-                  className="btn btn-outline-light btn-sm mb-0"
-                  style={{ cursor: "pointer" }}
-                >
-                  Importar
-                  <input
-                    type="file"
-                    accept="application/json"
-                    onChange={importarDatos}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
             </div>
 
-            {/* ===== CUERPO ===== */}
             <div className="calc-body">
               <FormularioGasto agregarGasto={agregarGasto} />
 
-              {/* Pendientes */}
               <h2 className="section-title">Pendientes</h2>
               <div className="list-soft">
                 <ListaGastos
@@ -201,7 +147,6 @@ const App = () => {
                 />
               </div>
 
-              {/* Pagados */}
               <div className="paid-block">
                 <h2 className="section-title">Pagados</h2>
                 <div className="list-soft">
@@ -214,7 +159,6 @@ const App = () => {
                 </div>
               </div>
             </div>
-            {/* FIN BODY */}
           </div>
         </div>
       </Container>
