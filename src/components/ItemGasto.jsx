@@ -54,9 +54,9 @@ const ItemGasto = ({ gasto, tipo, onAccion }) => {
         </div>
 
         {!esPagado ? (
-          <small className={esVencido ? "text-danger" : "text-muted"}>
-            Vence: {formatearDiaMes(gasto.vencimiento)}
-          </small>
+     <small className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}>
+  Vence: {formatearDiaMes(gasto.vencimiento)}
+</small>
         ) : (
           <small className="text-success">
             Gasto pagado el {formatearDiaMes(gasto.fechaPago)}
