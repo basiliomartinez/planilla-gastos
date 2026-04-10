@@ -330,3 +330,8 @@
     font-size: 0.95rem;
   }
 }
+
+.fecha-vencimiento-normal {
+  color: #cbd5e1 !important;
+  opacity: 1;
+}
