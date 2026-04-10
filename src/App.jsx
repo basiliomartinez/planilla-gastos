@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
-import FormularioGasto from "./components/FormularioGasto";
-import ListaGastos from "./components/ListaGastos";
+
+import NavbarPrincipal from "./components/layout/NavbarPrincipal";
+import FooterPrincipal from "./components/layout/FooterPrincipal";
+
+import PanelMensual from "./components/gastosMensuales/PanelMensual";
+import PanelFuturos from "./components/gastosFuturos/PanelFuturos";
+import PanelCuotas from "./components/gastosCuotas/PanelCuotas";
+
 import {
   listarGastosApi,
   crearGastoApi,
   pagarGastoApi,
   eliminarGastoApi,
 } from "./helpers/queries";
+
 import "./styles/gastos.css";
 
 const App = () => {
+  const [seccionActiva, setSeccionActiva] = useState("mensuales");
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
 
@@ -117,51 +125,47 @@ const App = () => {
     }
   };
 
+  const renderSeccion = () => {
+    switch (seccionActiva) {
+      case "mensuales":
+        return (
+          <PanelMensual
+            gastosPendientes={gastosPendientes}
+            gastosPagados={gastosPagados}
+            agregarGasto={agregarGasto}
+            marcarComoPagado={marcarComoPagado}
+            eliminarPagado={eliminarPagado}
+            totalPendiente={totalPendiente}
+          />
+        );
+
+      case "futuros":
+        return <PanelFuturos />;
+
+      case "cuotas":
+        return <PanelCuotas />;
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="gastos-bg py-5">
-      <Container>
-        <div className="calc-shell">
-          <div className="card calc-card">
-            <div className="calc-display">
-              <p className="calc-title">Planilla de Gastos</p>
+    <div className="app-layout gastos-bg">
+      <NavbarPrincipal
+        seccionActiva={seccionActiva}
+        setSeccionActiva={setSeccionActiva}
+      />
 
-              <p className="calc-amount">
-                ${totalPendiente.toLocaleString("es-AR")}
-              </p>
-
-              <div className="calc-sub">
-                {gastosPendientes.length} gasto(s) pendientes
-              </div>
-            </div>
-
-            <div className="calc-body">
-              <FormularioGasto agregarGasto={agregarGasto} />
-
-              <h2 className="section-title">Pendientes</h2>
-              <div className="list-soft">
-                <ListaGastos
-                  titulo={null}
-                  arrayGastos={gastosPendientes}
-                  tipo="pendiente"
-                  onAccion={marcarComoPagado}
-                />
-              </div>
-
-              <div className="paid-block">
-                <h2 className="section-title">Pagados</h2>
-                <div className="list-soft">
-                  <ListaGastos
-                    titulo={null}
-                    arrayGastos={gastosPagados}
-                    tipo="pagado"
-                    onAccion={eliminarPagado}
-                  />
-                </div>
-              </div>
-            </div>
+      <main className="main-content">
+        <Container className="py-2 py-md-4">
+          <div className="calc-shell">
+            <div className="calc-card">{renderSeccion()}</div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      </main>
+
+      <FooterPrincipal />
     </div>
   );
 };
