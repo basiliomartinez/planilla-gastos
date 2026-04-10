@@ -1,67 +1,82 @@
-/* ===== FONDO GENERAL (oscuro) ===== */
+/* ===== FONDO GENERAL ===== */
 .gastos-bg {
   min-height: 100vh;
-  background: radial-gradient(
-    circle at top,
-    #1f2933 0%,
-    #111827 55%,
-    #0b1220 100%
-  );
+  background: radial-gradient(circle at top, #0f172a 0%, #020617 70%);
 }
 
-/* ===== CONTENEDOR ===== */
+/* ===== ESTRUCTURA GENERAL ===== */
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+}
+
+/* ===== CONTENEDOR PRINCIPAL ===== */
 .calc-shell {
-  max-width: 720px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
-/* ===== CALCULADORA ===== */
 .calc-card {
-  border: 0;
+  background: #0b132b !important;
   border-radius: 22px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
   overflow: hidden;
-  background: #0f172a;
+
+  /* 👇 ESTA ES LA CLAVE */
+  border: 2px solid rgba(249, 248, 248, 0.25);
+
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
 }
 
-/* ===== DISPLAY ===== */
+/* Evita fondos raros de Bootstrap dentro de la tarjeta */
+.calc-card * {
+  background-color: transparent;
+}
+
+/* ===== DISPLAY SUPERIOR ===== */
 .calc-display {
-  background: linear-gradient(180deg, #020617 0%, #020617 100%);
+  background: linear-gradient(180deg, #020617 0%, #0b132b 100%);
   color: #e5e7eb;
-  padding: 26px 24px 22px;
+  padding: 28px 22px 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .calc-title {
-  font-size: 0.85rem;
-  letter-spacing: 0.25em;
+  font-size: 0.9rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  opacity: 0.7;
-  margin-bottom: 6px;
+  opacity: 0.75;
+  margin-bottom: 8px;
 }
 
 .calc-amount {
-  font-size: clamp(2.4rem, 5vw, 3.2rem);
+  font-size: clamp(2.4rem, 5vw, 3.4rem);
   font-weight: 800;
   line-height: 1.1;
   margin: 0;
-  color: #facc15; /* verde calculadora */
+  color: #facc15;
 }
 
 .calc-sub {
   margin-top: 10px;
-  font-size: 0.9rem;
-  opacity: 0.65;
+  font-size: 0.95rem;
+  color: #9ca3af;
 }
 
-/* ===== CUERPO ===== */
+/* ===== BODY ===== */
 .calc-body {
-  padding: 18px;
-  background: #020617;
+  background: #0b132b;
   color: #e5e7eb;
+  padding: 20px;
 }
 
-/* ===== SECCIONES ===== */
+/* ===== TITULOS ===== */
 .section-title {
   font-weight: 700;
   margin: 16px 0 10px;
@@ -72,62 +87,69 @@
 }
 
 /* ===== LISTAS ===== */
-.list-soft .list-group-item {
-  background: transparent;
-  border: 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+.list-soft .list-group-item,
+.list-group-item {
+  background: transparent !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
   padding: 14px 10px;
   color: #e5e7eb;
 }
 
-.list-soft .list-group-item:first-child {
-  border-top: 0;
+.list-soft .list-group-item:last-child,
+.list-group-item:last-child {
+  border-bottom: 0 !important;
 }
 
-/* ===== BLOQUE PAGADOS ===== */
 .paid-block {
   margin-top: 18px;
   padding-top: 14px;
   border-top: 1px dashed rgba(255, 255, 255, 0.12);
-  opacity: 0.85;
 }
 
 /* ===== INPUTS ===== */
-.form-control {
-  background: #020617;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+.form-label {
   color: #e5e7eb;
-  border-radius: 14px;
+  font-weight: 500;
+}
+
+.form-control {
+  background: #f3f4f6 !important;
+  color: #111827 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
 }
 
 .form-control:focus {
-  background: #020617;
-  color: #fff;
-  border-color: #22c55e;
-  box-shadow: 0 0 0 0.15rem rgba(34, 197, 94, 0.25);
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 0.15rem rgba(96, 165, 250, 0.25);
+}
+
+.form-control::placeholder {
+  color: #6b7280;
 }
 
 /* ===== BOTONES ===== */
 .btn {
-  border-radius: 14px;
+  border-radius: 12px;
 }
 
 .btn-add {
   font-weight: 800;
 }
 
-/* Botón pagar */
 .btn-danger {
-  background-color: #b91c1c;
-  border-color: #b91c1c;
+  background-color: #d94b53;
+  border-color: #d94b53;
 }
 
 .btn-danger:hover {
-  background-color: #dc2626;
-  border-color: #dc2626;
+  background-color: #c63c45;
+  border-color: #c63c45;
 }
 
-/* Botón eliminar */
 .btn-outline-danger {
   color: #f87171;
   border-color: #f87171;
@@ -139,21 +161,172 @@
   color: #fff;
 }
 
+/* ===== TEXTOS DE ESTADO ===== */
+.text-muted {
+  color: #cbd5e1 !important;
+}
+
+.text-success {
+  color: #4ade80 !important;
+}
+
+.text-danger {
+  color: #f87171 !important;
+}
+
 /* ===== BADGES ===== */
 .badge {
   border-radius: 10px;
 }
 
-/* Fecha de vencimiento en pendientes */
-.list-soft .text-muted {
-  color: #c3c5c9 !important; /* gris claro visible */
-  opacity: 0.9;
-}
-.calc-display .btn-outline-light {
-  border-color: rgba(255, 255, 255, 0.25);
-  color: rgba(255, 255, 255, 0.9);
+/* ===== NAVBAR ===== */
+.navbar {
+  background: rgba(15, 23, 42, 0.95) !important;
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.calc-display .btn-outline-light:hover {
-  border-color: rgba(255, 255, 255, 0.45);
+.navbar-brand {
+  color: #f8fafc !important;
+  font-weight: 600;
+}
+
+.nav-link {
+  color: #cbd5e1 !important;
+  transition: 0.2s ease;
+}
+
+.nav-link:hover {
+  color: #ffffff !important;
+}
+
+.nav-link.active {
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+/* ===== FOOTER ===== */
+.footer-principal {
+  background: #0b132b;
+  color: #aaa;
+  text-align: center;
+  padding: 4px 8px;
+  font-size: 11px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ===== PLACEHOLDERS FUTUROS / CUOTAS ===== */
+.panel-placeholder {
+  border-radius: 16px;
+  padding: 28px 18px;
+  text-align: center;
+  color: #e5e7eb;
+  margin-top: 8px;
+}
+
+.panel-placeholder h2 {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.panel-placeholder p {
+  margin: 0;
+  opacity: 0.95;
+  font-size: 1rem;
+}
+
+.panel-placeholder-futuros {
+  background: rgba(192, 132, 252, 0.08);
+  border: 1px solid rgba(192, 132, 252, 0.25);
+}
+
+.panel-placeholder-cuotas {
+  background: rgba(103, 232, 249, 0.08);
+  border: 1px solid rgba(103, 232, 249, 0.25);
+}
+
+/* ===== DISPLAY FUTUROS ===== */
+.calc-display-futuros {
+  background: linear-gradient(180deg, #1b1033 0%, #140b26 100%);
+}
+
+.calc-amount-futuros {
+  color: #c084fc;
+}
+
+/* ===== DISPLAY CUOTAS ===== */
+.calc-display-cuotas {
+  background: linear-gradient(180deg, #062a30 0%, #041d21 100%);
+}
+
+.calc-amount-cuotas {
+  color: #67e8f9;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .calc-shell {
+    max-width: 100%;
+  }
+
+  .calc-display {
+    padding: 22px 16px 18px;
+  }
+
+  .calc-body {
+    padding: 16px;
+  }
+
+  .calc-amount {
+    font-size: 2.6rem;
+  }
+
+  .panel-placeholder {
+    padding: 22px 14px;
+  }
+
+  .panel-placeholder h2 {
+    font-size: 1.5rem;
+  }
+
+  .navbar-brand {
+    font-size: 15px !important;
+  }
+
+  .footer-principal {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 576px) {
+  .calc-display {
+    padding: 18px 14px 16px;
+  }
+
+  .calc-body {
+    padding: 14px;
+  }
+
+  .calc-amount {
+    font-size: 2.2rem;
+  }
+
+  .calc-sub {
+    font-size: 0.9rem;
+  }
+
+  .section-title {
+    font-size: 0.9rem;
+  }
+
+  .panel-placeholder h2 {
+    font-size: 1.3rem;
+  }
+
+  .panel-placeholder p {
+    font-size: 0.95rem;
+  }
 }
