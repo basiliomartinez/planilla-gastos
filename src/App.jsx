@@ -13,25 +13,30 @@ import {
   crearGastoApi,
   pagarGastoApi,
   eliminarGastoApi,
+  pasarGastoFuturoAMensualApi,
 } from "./helpers/queries";
 
 import "./styles/gastos.css";
 
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
+
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
+  const [gastosFuturos, setGastosFuturos] = useState([]);
 
   useEffect(() => {
     const cargarGastos = async () => {
       try {
-        const data = await listarGastosApi();
+        const mensuales = await listarGastosApi("mensual");
+        const futuros = await listarGastosApi("futuro");
 
-        const pendientes = data.filter((g) => g.estado === "pendiente");
-        const pagados = data.filter((g) => g.estado === "pagado");
+        const pendientes = mensuales.filter((g) => g.estado === "pendiente");
+        const pagados = mensuales.filter((g) => g.estado === "pagado");
 
         setGastosPendientes(pendientes);
         setGastosPagados(pagados);
+        setGastosFuturos(futuros);
       } catch (error) {
         console.error("Error al cargar los gastos:", error);
       }
@@ -62,7 +67,10 @@ const App = () => {
     }
 
     try {
-      const resp = await crearGastoApi(nuevoGasto);
+      const resp = await crearGastoApi({
+        ...nuevoGasto,
+        tipo: "mensual",
+      });
 
       if (resp.gasto) {
         setGastosPendientes([...gastosPendientes, resp.gasto]);
@@ -78,6 +86,42 @@ const App = () => {
       return {
         ok: false,
         msg: "Ocurrió un error al crear el gasto.",
+      };
+    }
+  };
+
+  const agregarGastoFuturo = async (nuevoGasto) => {
+    const existe = gastosFuturos.some(
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+    );
+
+    if (existe) {
+      return {
+        ok: false,
+        msg: "Ese gasto futuro ya existe.",
+      };
+    }
+
+    try {
+      const resp = await crearGastoApi({
+        ...nuevoGasto,
+        tipo: "futuro",
+      });
+
+      if (resp.gasto) {
+        setGastosFuturos([...gastosFuturos, resp.gasto]);
+        return { ok: true };
+      }
+
+      return {
+        ok: false,
+        msg: "No se pudo crear el gasto futuro.",
+      };
+    } catch (error) {
+      console.error("Error al crear gasto futuro:", error);
+      return {
+        ok: false,
+        msg: "Ocurrió un error al crear el gasto futuro.",
       };
     }
   };
@@ -125,6 +169,27 @@ const App = () => {
     }
   };
 
+  const pasarFuturoAMensual = async (id) => {
+    const gasto = gastosFuturos.find((g) => g._id === id);
+    if (!gasto) return;
+
+    const confirmar = window.confirm(
+      `¿Pasar "${gasto.nombre}" a gastos mensuales?`
+    );
+    if (!confirmar) return;
+
+    try {
+      const resp = await pasarGastoFuturoAMensualApi(id);
+
+      if (!resp.gasto) return;
+
+      setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
+      setGastosPendientes([...gastosPendientes, resp.gasto]);
+    } catch (error) {
+      console.error("Error al pasar gasto futuro a mensual:", error);
+    }
+  };
+
   const renderSeccion = () => {
     switch (seccionActiva) {
       case "mensuales":
@@ -140,7 +205,13 @@ const App = () => {
         );
 
       case "futuros":
-        return <PanelFuturos />;
+        return (
+          <PanelFuturos
+            gastosFuturos={gastosFuturos}
+            agregarGastoFuturo={agregarGastoFuturo}
+            pasarFuturoAMensual={pasarFuturoAMensual}
+          />
+        );
 
       case "cuotas":
         return <PanelCuotas />;
