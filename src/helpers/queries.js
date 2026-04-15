@@ -1,6 +1,5 @@
 const API_URL = (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
 
-// helper para manejar respuestas
 const handleResponse = async (res) => {
   const data = await res.json();
 
@@ -11,10 +10,10 @@ const handleResponse = async (res) => {
   return data;
 };
 
-// GET
-export const listarGastosApi = async () => {
+export const listarGastosApi = async (tipo = "") => {
   try {
-    const res = await fetch(`${API_URL}/gastos`);
+    const url = tipo ? `${API_URL}/gastos?tipo=${tipo}` : `${API_URL}/gastos`;
+    const res = await fetch(url);
     return await handleResponse(res);
   } catch (error) {
     console.error("Error al listar gastos:", error);
@@ -22,7 +21,6 @@ export const listarGastosApi = async () => {
   }
 };
 
-// POST
 export const crearGastoApi = async (gasto) => {
   try {
     const res = await fetch(`${API_URL}/gastos`, {
@@ -40,7 +38,6 @@ export const crearGastoApi = async (gasto) => {
   }
 };
 
-// PUT (pagar)
 export const pagarGastoApi = async (id) => {
   try {
     const res = await fetch(`${API_URL}/gastos/${id}`, {
@@ -54,7 +51,6 @@ export const pagarGastoApi = async (id) => {
   }
 };
 
-// DELETE
 export const eliminarGastoApi = async (id) => {
   try {
     const res = await fetch(`${API_URL}/gastos/${id}`, {
@@ -64,6 +60,19 @@ export const eliminarGastoApi = async (id) => {
     return await handleResponse(res);
   } catch (error) {
     console.error("Error al eliminar gasto:", error);
+    return {};
+  }
+};
+
+export const pasarGastoFuturoAMensualApi = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/gastos/activar/${id}`, {
+      method: "PUT",
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al pasar gasto futuro a mensual:", error);
     return {};
   }
 };
