@@ -14,6 +14,10 @@ import {
   pagarGastoApi,
   eliminarGastoApi,
   pasarGastoFuturoAMensualApi,
+  listarCuotasApi,
+  crearCuotaApi,
+  pagarCuotaApi,
+  eliminarCuotaApi,
 } from "./helpers/queries";
 
 import "./styles/gastos.css";
@@ -24,12 +28,14 @@ const App = () => {
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
+  const [cuotas, setCuotas] = useState([]);
 
   useEffect(() => {
-    const cargarGastos = async () => {
+    const cargarDatos = async () => {
       try {
         const mensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
+        const cuotasData = await listarCuotasApi();
 
         const pendientes = mensuales.filter((g) => g.estado === "pendiente");
         const pagados = mensuales.filter((g) => g.estado === "pagado");
@@ -37,18 +43,22 @@ const App = () => {
         setGastosPendientes(pendientes);
         setGastosPagados(pagados);
         setGastosFuturos(futuros);
+        setCuotas(cuotasData);
       } catch (error) {
-        console.error("Error al cargar los gastos:", error);
+        console.error("Error al cargar datos:", error);
       }
     };
 
-    cargarGastos();
+    cargarDatos();
   }, []);
 
+  // ===== TOTALES =====
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
     0
   );
+
+  // ===== GASTOS =====
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
@@ -77,16 +87,10 @@ const App = () => {
         return { ok: true };
       }
 
-      return {
-        ok: false,
-        msg: "No se pudo crear el gasto.",
-      };
+      return { ok: false, msg: "No se pudo crear el gasto." };
     } catch (error) {
-      console.error("Error al crear el gasto:", error);
-      return {
-        ok: false,
-        msg: "Ocurrió un error al crear el gasto.",
-      };
+      console.error(error);
+      return { ok: false, msg: "Error al crear gasto" };
     }
   };
 
@@ -96,10 +100,7 @@ const App = () => {
     );
 
     if (existe) {
-      return {
-        ok: false,
-        msg: "Ese gasto futuro ya existe.",
-      };
+      return { ok: false, msg: "Ese gasto futuro ya existe." };
     }
 
     try {
@@ -113,16 +114,10 @@ const App = () => {
         return { ok: true };
       }
 
-      return {
-        ok: false,
-        msg: "No se pudo crear el gasto futuro.",
-      };
+      return { ok: false, msg: "No se pudo crear gasto futuro." };
     } catch (error) {
-      console.error("Error al crear gasto futuro:", error);
-      return {
-        ok: false,
-        msg: "Ocurrió un error al crear el gasto futuro.",
-      };
+      console.error(error);
+      return { ok: false, msg: "Error al crear gasto futuro" };
     }
   };
 
@@ -130,65 +125,64 @@ const App = () => {
     const gasto = gastosPendientes.find((g) => g._id === id);
     if (!gasto) return;
 
-    const confirmar = window.confirm(
-      `¿Confirmás que pagaste "${gasto.nombre}" por $${gasto.monto.toLocaleString(
-        "es-AR"
-      )}?`
-    );
+    const confirmar = window.confirm(`¿Pagaste "${gasto.nombre}"?`);
     if (!confirmar) return;
 
-    try {
-      const resp = await pagarGastoApi(id);
+    const resp = await pagarGastoApi(id);
 
-      if (!resp.gasto) return;
+    if (!resp.gasto) return;
 
-      setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
-      setGastosPagados([resp.gasto, ...gastosPagados]);
-    } catch (error) {
-      console.error("Error al pagar el gasto:", error);
-    }
+    setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+    setGastosPagados([resp.gasto, ...gastosPagados]);
   };
 
   const eliminarPagado = async (id) => {
-    const gasto = gastosPagados.find((g) => g._id === id);
-    if (!gasto) return;
-
-    const confirmar = window.confirm(
-      `¿Eliminar del historial el gasto "${gasto.nombre}"?`
-    );
+    const confirmar = window.confirm("¿Eliminar gasto?");
     if (!confirmar) return;
 
-    try {
-      const resp = await eliminarGastoApi(id);
-
-      if (!resp.gasto) return;
-
-      setGastosPagados(gastosPagados.filter((g) => g._id !== id));
-    } catch (error) {
-      console.error("Error al eliminar el gasto:", error);
-    }
+    await eliminarGastoApi(id);
+    setGastosPagados(gastosPagados.filter((g) => g._id !== id));
   };
 
   const pasarFuturoAMensual = async (id) => {
-    const gasto = gastosFuturos.find((g) => g._id === id);
-    if (!gasto) return;
-
-    const confirmar = window.confirm(
-      `¿Pasar "${gasto.nombre}" a gastos mensuales?`
-    );
+    const confirmar = window.confirm("¿Pasar a mensual?");
     if (!confirmar) return;
 
-    try {
-      const resp = await pasarGastoFuturoAMensualApi(id);
+    const resp = await pasarGastoFuturoAMensualApi(id);
 
-      if (!resp.gasto) return;
+    if (!resp.gasto) return;
 
-      setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
-      setGastosPendientes([...gastosPendientes, resp.gasto]);
-    } catch (error) {
-      console.error("Error al pasar gasto futuro a mensual:", error);
-    }
+    setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
+    setGastosPendientes([...gastosPendientes, resp.gasto]);
   };
+
+  // ===== CUOTAS =====
+
+  const agregarCuota = async (nuevaCuota) => {
+    const resp = await crearCuotaApi(nuevaCuota);
+
+    if (resp.cuota) {
+      setCuotas([resp.cuota, ...cuotas]);
+      return { ok: true };
+    }
+
+    return { ok: false, msg: "No se pudo crear cuota" };
+  };
+
+  const pagarCuota = async (id) => {
+    const resp = await pagarCuotaApi(id);
+
+    if (!resp.cuota) return;
+
+    setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
+  };
+
+  const eliminarCuota = async (id) => {
+    await eliminarCuotaApi(id);
+    setCuotas(cuotas.filter((c) => c._id !== id));
+  };
+
+  // ===== RENDER =====
 
   const renderSeccion = () => {
     switch (seccionActiva) {
@@ -214,7 +208,14 @@ const App = () => {
         );
 
       case "cuotas":
-        return <PanelCuotas />;
+        return (
+          <PanelCuotas
+            cuotas={cuotas}
+            agregarCuota={agregarCuota}
+            pagarCuota={pagarCuota}
+            eliminarCuota={eliminarCuota}
+          />
+        );
 
       default:
         return null;
