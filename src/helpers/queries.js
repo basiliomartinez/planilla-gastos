@@ -76,3 +76,59 @@ export const pasarGastoFuturoAMensualApi = async (id) => {
     return {};
   }
 };
+
+
+// ===== CUOTAS =====
+
+export const listarCuotasApi = async () => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas`);
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al listar cuotas:", error);
+    return [];
+  }
+};
+
+export const crearCuotaApi = async (cuota) => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(cuota),
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al crear cuota:", error);
+    return {};
+  }
+};
+
+export const pagarCuotaApi = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas/${id}`, {
+      method: "PUT",
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al pagar cuota:", error);
+    return {};
+  }
+};
+
+export const eliminarCuotaApi = async (id) => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas/${id}`, {
+      method: "DELETE",
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al eliminar cuota:", error);
+    return {};
+  }
+};
