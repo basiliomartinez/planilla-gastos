@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 
+import Login from "./components/auth/Login";
+
 import NavbarPrincipal from "./components/layout/NavbarPrincipal";
 import FooterPrincipal from "./components/layout/FooterPrincipal";
 
@@ -25,12 +27,18 @@ import "./styles/gastos.css";
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
 
+  const [usuarioLogueado, setUsuarioLogueado] = useState(
+    JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
+  );
+
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
   const [cuotas, setCuotas] = useState([]);
 
   useEffect(() => {
+    if (!usuarioLogueado?.token) return;
+
     const cargarDatos = async () => {
       try {
         const mensuales = await listarGastosApi("mensual");
@@ -50,15 +58,25 @@ const App = () => {
     };
 
     cargarDatos();
-  }, []);
+  }, [usuarioLogueado]);
 
-  // ===== TOTALES =====
+  const cerrarSesion = () => {
+    sessionStorage.removeItem("usuarioKey");
+    setUsuarioLogueado({});
+    setGastosPendientes([]);
+    setGastosPagados([]);
+    setGastosFuturos([]);
+    setCuotas([]);
+  };
+
+  if (!usuarioLogueado?.token) {
+    return <Login setUsuarioLogueado={setUsuarioLogueado} />;
+  }
+
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
     0
   );
-
-  // ===== GASTOS =====
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
@@ -156,8 +174,6 @@ const App = () => {
     setGastosPendientes([...gastosPendientes, resp.gasto]);
   };
 
-  // ===== CUOTAS =====
-
   const agregarCuota = async (nuevaCuota) => {
     const resp = await crearCuotaApi(nuevaCuota);
 
@@ -181,8 +197,6 @@ const App = () => {
     await eliminarCuotaApi(id);
     setCuotas(cuotas.filter((c) => c._id !== id));
   };
-
-  // ===== RENDER =====
 
   const renderSeccion = () => {
     switch (seccionActiva) {
@@ -227,6 +241,8 @@ const App = () => {
       <NavbarPrincipal
         seccionActiva={seccionActiva}
         setSeccionActiva={setSeccionActiva}
+        usuarioLogueado={usuarioLogueado}
+        cerrarSesion={cerrarSesion}
       />
 
       <main className="main-content">

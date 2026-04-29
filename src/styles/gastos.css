@@ -340,3 +340,9 @@
   color: #cbd5e1 !important;
   opacity: 1;
 }
+
+.navbar-user {
+  color: #facc15;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
