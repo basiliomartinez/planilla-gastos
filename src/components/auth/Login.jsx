@@ -1,15 +1,44 @@
 import { useState } from "react";
 import { Button, Form, Container, Alert } from "react-bootstrap";
-import { loginApi } from "../../helpers/queries";
+import { loginApi, registroApi } from "../../helpers/queries";
 
 const Login = ({ setUsuarioLogueado }) => {
+  const [modoRegistro, setModoRegistro] = useState(false);
+  const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
+  const [mensaje, setMensaje] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setMensaje("");
+
+    if (modoRegistro) {
+      if (nombre.trim() === "") {
+        setError("El nombre es obligatorio.");
+        return;
+      }
+
+      const data = await registroApi({
+        nombre: nombre.trim(),
+        email,
+        password,
+      });
+
+      if (!data?.mensaje) {
+        setError("No se pudo registrar el usuario.");
+        return;
+      }
+
+      setMensaje("Usuario registrado correctamente. Ahora podés iniciar sesión.");
+      setModoRegistro(false);
+      setNombre("");
+      setPassword("");
+      return;
+    }
 
     const data = await loginApi({ email, password });
 
@@ -33,18 +62,34 @@ const Login = ({ setUsuarioLogueado }) => {
       <Container className="py-5" style={{ maxWidth: "420px" }}>
         <div className="calc-card p-4">
           <h1 className="text-light text-center mb-3">Cuentas Claras</h1>
+
           <p className="text-center detalle-cuota mb-4">
-            Ingresá para ver tus gastos.
+            {modoRegistro
+              ? "Creá tu cuenta para gestionar tus gastos."
+              : "Ingresá para ver tus gastos."}
           </p>
 
           {error && <Alert variant="danger">{error}</Alert>}
+          {mensaje && <Alert variant="success">{mensaje}</Alert>}
 
           <Form onSubmit={handleSubmit}>
+            {modoRegistro && (
+              <Form.Group className="mb-3">
+                <Form.Label>Nombre</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Ej: Basilio"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                />
+              </Form.Group>
+            )}
+
             <Form.Group className="mb-3">
               <Form.Label>Email</Form.Label>
               <Form.Control
                 type="email"
-                placeholder="usuario1@test.com"
+                placeholder="usuario@test.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -54,16 +99,32 @@ const Login = ({ setUsuarioLogueado }) => {
               <Form.Label>Contraseña</Form.Label>
               <Form.Control
                 type="password"
-                placeholder="123456"
+                placeholder="Mínimo 6 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </Form.Group>
 
             <Button type="submit" className="w-100">
-              Ingresar
+              {modoRegistro ? "Crear cuenta" : "Ingresar"}
             </Button>
           </Form>
+
+          <div className="text-center mt-3">
+            <Button
+              variant="link"
+              className="text-light"
+              onClick={() => {
+                setModoRegistro(!modoRegistro);
+                setError("");
+                setMensaje("");
+              }}
+            >
+              {modoRegistro
+                ? "Ya tengo cuenta, ingresar"
+                : "No tengo cuenta, registrarme"}
+            </Button>
+          </div>
         </div>
       </Container>
     </div>

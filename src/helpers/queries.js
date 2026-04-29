@@ -38,6 +38,22 @@ export const loginApi = async (usuario) => {
     return {};
   }
 };
+export const registroApi = async (usuario) => {
+  try {
+    const res = await fetch(`${API_URL}/usuarios/registro`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(usuario),
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al registrar usuario:", error);
+    return {};
+  }
+};
 
 // ===== GASTOS =====
 
