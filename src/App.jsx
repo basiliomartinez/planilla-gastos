@@ -32,6 +32,7 @@ const App = () => {
   );
 
   const [mensajeSesion, setMensajeSesion] = useState("");
+  const [cargando, setCargando] = useState(false);
 
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
@@ -42,6 +43,8 @@ const App = () => {
     if (!usuarioLogueado?.token) return;
 
     const cargarDatos = async () => {
+      setCargando(true);
+
       try {
         const mensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
@@ -56,6 +59,8 @@ const App = () => {
         setCuotas(cuotasData);
       } catch (error) {
         console.error("Error al cargar datos:", error);
+      } finally {
+        setCargando(false);
       }
     };
 
@@ -70,6 +75,7 @@ const App = () => {
       setGastosPagados([]);
       setGastosFuturos([]);
       setCuotas([]);
+      setCargando(false);
     };
 
     window.addEventListener("sesionExpirada", manejarSesionExpirada);
@@ -87,6 +93,7 @@ const App = () => {
     setGastosPagados([]);
     setGastosFuturos([]);
     setCuotas([]);
+    setCargando(false);
   };
 
   if (!usuarioLogueado?.token) {
@@ -96,6 +103,20 @@ const App = () => {
         mensajeSesion={mensajeSesion}
         setMensajeSesion={setMensajeSesion}
       />
+    );
+  }
+
+  if (cargando) {
+    return (
+      <div
+        className="app-layout gastos-bg d-flex justify-content-center align-items-center"
+        style={{ minHeight: "100vh" }}
+      >
+        <div className="text-center text-light">
+          <div className="spinner-border mb-3" role="status"></div>
+          <p>Cargando datos...</p>
+        </div>
+      </div>
     );
   }
 
