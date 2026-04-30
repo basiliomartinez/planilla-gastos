@@ -31,6 +31,8 @@ const App = () => {
     JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
   );
 
+  const [mensajeSesion, setMensajeSesion] = useState("");
+
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
@@ -60,9 +62,27 @@ const App = () => {
     cargarDatos();
   }, [usuarioLogueado]);
 
+  useEffect(() => {
+    const manejarSesionExpirada = () => {
+      setUsuarioLogueado({});
+      setMensajeSesion("Tu sesión expiró. Volvé a iniciar sesión.");
+      setGastosPendientes([]);
+      setGastosPagados([]);
+      setGastosFuturos([]);
+      setCuotas([]);
+    };
+
+    window.addEventListener("sesionExpirada", manejarSesionExpirada);
+
+    return () => {
+      window.removeEventListener("sesionExpirada", manejarSesionExpirada);
+    };
+  }, []);
+
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioKey");
     setUsuarioLogueado({});
+    setMensajeSesion("");
     setGastosPendientes([]);
     setGastosPagados([]);
     setGastosFuturos([]);
@@ -70,7 +90,13 @@ const App = () => {
   };
 
   if (!usuarioLogueado?.token) {
-    return <Login setUsuarioLogueado={setUsuarioLogueado} />;
+    return (
+      <Login
+        setUsuarioLogueado={setUsuarioLogueado}
+        mensajeSesion={mensajeSesion}
+        setMensajeSesion={setMensajeSesion}
+      />
+    );
   }
 
   const totalPendiente = gastosPendientes.reduce(

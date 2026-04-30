@@ -13,6 +13,12 @@ const headersConToken = () => ({
 const handleResponse = async (res) => {
   const data = await res.json();
 
+  if (res.status === 401) {
+    sessionStorage.removeItem("usuarioKey");
+    window.dispatchEvent(new Event("sesionExpirada"));
+    throw new Error(data.mensaje || "Sesión expirada");
+  }
+
   if (!res.ok) {
     throw new Error(data.mensaje || "Error en la petición");
   }

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Form, Container, Alert } from "react-bootstrap";
 import { loginApi, registroApi } from "../../helpers/queries";
 
-const Login = ({ setUsuarioLogueado }) => {
+const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
   const [modoRegistro, setModoRegistro] = useState(false);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
@@ -33,7 +33,9 @@ const Login = ({ setUsuarioLogueado }) => {
         return;
       }
 
-      setMensaje("Usuario registrado correctamente. Ahora podés iniciar sesión.");
+      setMensaje(
+        "Usuario registrado correctamente. Ahora podés iniciar sesión.",
+      );
       setModoRegistro(false);
       setNombre("");
       setPassword("");
@@ -62,7 +64,15 @@ const Login = ({ setUsuarioLogueado }) => {
       <Container className="py-5" style={{ maxWidth: "420px" }}>
         <div className="calc-card p-4">
           <h1 className="text-light text-center mb-3">Cuentas Claras</h1>
-
+          {mensajeSesion && (
+            <Alert
+              variant="warning"
+              onClose={() => setMensajeSesion("")}
+              dismissible
+            >
+              {mensajeSesion}
+            </Alert>
+          )}
           <p className="text-center detalle-cuota mb-4">
             {modoRegistro
               ? "Creá tu cuenta para gestionar tus gastos."
