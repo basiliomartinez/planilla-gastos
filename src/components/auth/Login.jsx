@@ -18,7 +18,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
 
     if (modoRegistro) {
       if (nombre.trim() === "") {
-        setError("El nombre es obligatorio.");
+        setError("Decinos tu nombre 🙂");
         return;
       }
 
@@ -29,13 +29,11 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
       });
 
       if (!data?.mensaje) {
-        setError("No se pudo registrar el usuario.");
+        setError("No se pudo crear la cuenta 😕");
         return;
       }
 
-      setMensaje(
-        "Usuario registrado correctamente. Ahora podés iniciar sesión.",
-      );
+      setMensaje("Cuenta creada correctamente 🎉 Ahora podés ingresar.");
       setModoRegistro(false);
       setNombre("");
       setPassword("");
@@ -45,7 +43,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
     const data = await loginApi({ email, password });
 
     if (!data?.token) {
-      setError("Email o contraseña incorrectos.");
+      setError("Email o contraseña incorrectos 😕");
       return;
     }
 
@@ -60,10 +58,18 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
   };
 
   return (
-    <div className="app-layout gastos-bg">
-      <Container className="py-5" style={{ maxWidth: "420px" }}>
-        <div className="calc-card p-4">
-          <h1 className="text-light text-center mb-3">Cuentas Claras</h1>
+    <div className="app-layout gastos-bg d-flex align-items-center justify-content-center">
+      <Container style={{ maxWidth: "420px" }}>
+        <div className="calc-card p-4 shadow-lg">
+
+          <h1 className="text-center text-light mb-2">💰 Cuentas Claras</h1>
+
+          <p className="text-center text-secondary mb-4">
+            {modoRegistro
+              ? "Creá tu cuenta para empezar"
+              : "Ingresá para ver tus gastos"}
+          </p>
+
           {mensajeSesion && (
             <Alert
               variant="warning"
@@ -73,11 +79,6 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
               {mensajeSesion}
             </Alert>
           )}
-          <p className="text-center detalle-cuota mb-4">
-            {modoRegistro
-              ? "Creá tu cuenta para gestionar tus gastos."
-              : "Ingresá para ver tus gastos."}
-          </p>
 
           {error && <Alert variant="danger">{error}</Alert>}
           {mensaje && <Alert variant="success">{mensaje}</Alert>}
@@ -85,7 +86,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
           <Form onSubmit={handleSubmit}>
             {modoRegistro && (
               <Form.Group className="mb-3">
-                <Form.Label>Nombre</Form.Label>
+                <Form.Label className="text-light">Nombre</Form.Label>
                 <Form.Control
                   type="text"
                   placeholder="Ej: Basilio"
@@ -96,7 +97,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
             )}
 
             <Form.Group className="mb-3">
-              <Form.Label>Email</Form.Label>
+              <Form.Label className="text-light">Email</Form.Label>
               <Form.Control
                 type="email"
                 placeholder="usuario@test.com"
@@ -106,7 +107,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
+              <Form.Label className="text-light">Contraseña</Form.Label>
               <Form.Control
                 type="password"
                 placeholder="Mínimo 6 caracteres"
@@ -115,7 +116,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
               />
             </Form.Group>
 
-            <Button type="submit" className="w-100">
+            <Button type="submit" className="w-100 mb-2">
               {modoRegistro ? "Crear cuenta" : "Ingresar"}
             </Button>
           </Form>
@@ -123,7 +124,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
           <div className="text-center mt-3">
             <Button
               variant="link"
-              className="text-light"
+              className="text-decoration-none text-info"
               onClick={() => {
                 setModoRegistro(!modoRegistro);
                 setError("");
@@ -131,8 +132,8 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
               }}
             >
               {modoRegistro
-                ? "Ya tengo cuenta, ingresar"
-                : "No tengo cuenta, registrarme"}
+                ? "Ya tengo cuenta"
+                : "No tengo cuenta"}
             </Button>
           </div>
         </div>
