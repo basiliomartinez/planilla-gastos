@@ -31,6 +31,9 @@ const App = () => {
     JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
   );
 
+  const [mensajeSesion, setMensajeSesion] = useState("");
+  const [cargando, setCargando] = useState(false);
+
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
@@ -40,6 +43,8 @@ const App = () => {
     if (!usuarioLogueado?.token) return;
 
     const cargarDatos = async () => {
+      setCargando(true);
+
       try {
         const mensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
@@ -54,23 +59,65 @@ const App = () => {
         setCuotas(cuotasData);
       } catch (error) {
         console.error("Error al cargar datos:", error);
+      } finally {
+        setCargando(false);
       }
     };
 
     cargarDatos();
   }, [usuarioLogueado]);
 
+  useEffect(() => {
+    const manejarSesionExpirada = () => {
+      setUsuarioLogueado({});
+      setMensajeSesion("Tu sesión expiró. Volvé a iniciar sesión.");
+      setGastosPendientes([]);
+      setGastosPagados([]);
+      setGastosFuturos([]);
+      setCuotas([]);
+      setCargando(false);
+    };
+
+    window.addEventListener("sesionExpirada", manejarSesionExpirada);
+
+    return () => {
+      window.removeEventListener("sesionExpirada", manejarSesionExpirada);
+    };
+  }, []);
+
   const cerrarSesion = () => {
     sessionStorage.removeItem("usuarioKey");
     setUsuarioLogueado({});
+    setMensajeSesion("");
     setGastosPendientes([]);
     setGastosPagados([]);
     setGastosFuturos([]);
     setCuotas([]);
+    setCargando(false);
   };
 
   if (!usuarioLogueado?.token) {
-    return <Login setUsuarioLogueado={setUsuarioLogueado} />;
+    return (
+      <Login
+        setUsuarioLogueado={setUsuarioLogueado}
+        mensajeSesion={mensajeSesion}
+        setMensajeSesion={setMensajeSesion}
+      />
+    );
+  }
+
+  if (cargando) {
+    return (
+      <div
+        className="app-layout gastos-bg d-flex justify-content-center align-items-center"
+        style={{ minHeight: "100vh" }}
+      >
+        <div className="text-center text-light">
+          <div className="spinner-border mb-3" role="status"></div>
+          <p>Cargando datos...</p>
+        </div>
+      </div>
+    );
   }
 
   const totalPendiente = gastosPendientes.reduce(
