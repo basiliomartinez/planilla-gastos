@@ -21,7 +21,15 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
         setError("Decinos tu nombre 🙂");
         return;
       }
+      if (!email.includes("@")) {
+        setError("Ingresá un email válido 📧");
+        return;
+      }
 
+      if (password.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres 🔒");
+        return;
+      }
       const data = await registroApi({
         nombre: nombre.trim(),
         email,
@@ -29,7 +37,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
       });
 
       if (!data?.mensaje) {
-        setError("No se pudo crear la cuenta 😕");
+        setError(data?.mensaje || "Error al crear cuenta 😕");
         return;
       }
 
@@ -39,7 +47,10 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
       setPassword("");
       return;
     }
-
+    if (!email || !password) {
+      setError("Completá email y contraseña 🙏");
+      return;
+    }
     const data = await loginApi({ email, password });
 
     if (!data?.token) {
@@ -61,7 +72,6 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
     <div className="app-layout gastos-bg d-flex align-items-center justify-content-center">
       <Container style={{ maxWidth: "420px" }}>
         <div className="calc-card p-4 shadow-lg">
-
           <h1 className="text-center text-light mb-2">💰 Cuentas Claras</h1>
 
           <p className="text-center text-secondary mb-4">
@@ -131,9 +141,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
                 setMensaje("");
               }}
             >
-              {modoRegistro
-                ? "Ya tengo cuenta"
-                : "No tengo cuenta"}
+              {modoRegistro ? "Ya tengo cuenta" : "No tengo cuenta"}
             </Button>
           </div>
         </div>
