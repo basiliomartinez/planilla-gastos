@@ -8,92 +8,79 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mostrarPassword, setMostrarPassword] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+
+  const validarNombre = (nombre) =>
+    /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre);
+
+  const validarPassword = (password) =>
+    password.length >= 8 &&
+    /[A-Z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[!@#$%^&*(),.?":{}|<>_\-+=/\\[\]]/.test(password);
+
+  const esFormularioValido = () => {
+    if (modoRegistro) {
+      return (
+        nombre.trim().length >= 2 &&
+        validarNombre(nombre) &&
+        email.includes("@") &&
+        validarPassword(password)
+      );
+    }
+
+    return email.trim() !== "" && password.trim() !== "";
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setMensaje("");
+    setCargando(true);
 
-    if (modoRegistro) {
-      if (nombre.trim() === "") {
-        setError("Decinos tu nombre 🙂");
+    try {
+      if (modoRegistro) {
+        const data = await registroApi({
+          nombre: nombre.trim(),
+          email,
+          password,
+        });
+
+        if (!data?.ok) {
+          setError(data?.mensaje || "Error al crear cuenta 😕");
+          return;
+        }
+
+        setMensaje("Cuenta creada correctamente 🎉 Ahora podés ingresar.");
+        setModoRegistro(false);
+        setNombre("");
+        setEmail("");
+        setPassword("");
         return;
       }
 
-      if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre)) {
-        setError("El nombre solo puede tener letras y espacios.");
+      const data = await loginApi({ email, password });
+
+      if (!data?.token) {
+        setError("Email o contraseña incorrectos 😕");
         return;
       }
 
-      if (!email.includes("@")) {
-        setError("Ingresá un email válido 📧");
-        return;
-      }
+      const usuario = {
+        nombre: data.nombre,
+        email: data.email,
+        token: data.token,
+      };
 
-      if (password.length < 8) {
-        setError("La contraseña debe tener al menos 8 caracteres 🔒");
-        return;
-      }
-
-      const data = await registroApi({
-        nombre: nombre.trim(),
-        email,
-        password,
-      });
-
-      if (!data?.mensaje) {
-        setError(data?.mensaje || "Error al crear cuenta 😕");
-        return;
-      }
-
-      setMensaje("Cuenta creada correctamente 🎉 Ahora podés ingresar.");
-      setModoRegistro(false);
-      setNombre("");
-      setEmail("");
-      setPassword("");
-      return;
+      sessionStorage.setItem("usuarioKey", JSON.stringify(usuario));
+      setUsuarioLogueado(usuario);
+    } finally {
+      setCargando(false);
     }
-
-    if (!email || !password) {
-      setError("Completá email y contraseña 🙏");
-      return;
-    }
-
-    const data = await loginApi({ email, password });
-
-    if (!data?.token) {
-      setError("Email o contraseña incorrectos 😕");
-      return;
-    }
-
-    const usuario = {
-      nombre: data.nombre,
-      email: data.email,
-      token: data.token,
-    };
-
-    sessionStorage.setItem("usuarioKey", JSON.stringify(usuario));
-    setUsuarioLogueado(usuario);
   };
-const esFormularioValido = () => {
-  if (modoRegistro) {
-    return (
-      nombre.trim().length >= 2 &&
-      /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre) &&
-      email.includes("@") &&
-      password.length >= 8 &&
-      /[A-Z]/.test(password) &&
-      /[0-9]/.test(password) &&
-      /[!@#$%^&*(),.?":{}|<>_\-+=/\\[\]]/.test(password)
-    );
-  }
-
-  // login
-  return email !== "" && password !== "";
-};
 
   return (
     <div className="app-layout gastos-bg d-flex align-items-center justify-content-center">
@@ -126,18 +113,16 @@ const esFormularioValido = () => {
                 <Form.Label className="text-light">Nombre</Form.Label>
                 <Form.Control
                   type="text"
-                  placeholder="Ej: Juan Pérez"
+                  placeholder="Nombre y apellido"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                 />
 
-                {/* 👇 PASO 5: esto va debajo del input de nombre */}
                 <Form.Text className="text-warning">
                   {nombre.length > 0 &&
-                    !/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombre) &&
+                    !validarNombre(nombre) &&
                     "Solo letras y espacios"}
                 </Form.Text>
-                {/* 👆 FIN PASO 5 */}
               </Form.Group>
             )}
 
@@ -157,7 +142,7 @@ const esFormularioValido = () => {
               <div className="position-relative">
                 <Form.Control
                   type={mostrarPassword ? "text" : "password"}
-                  placeholder="Ej: Abc123!@"
+                  placeholder="Mínimo 8 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -196,11 +181,21 @@ const esFormularioValido = () => {
               </Form.Text>
             </Form.Group>
 
-            <Button type="submit" 
-            className="w-100 mb-2"
-            disabled={!esFormularioValido()}
+            <Button
+              type="submit"
+              className="w-100 mb-2"
+              disabled={!esFormularioValido() || cargando}
             >
-              {modoRegistro ? "Crear cuenta" : "Ingresar"}
+              {cargando ? (
+                <>
+                  <span className="spinner-border spinner-border-sm me-2"></span>
+                  Procesando...
+                </>
+              ) : modoRegistro ? (
+                "Crear cuenta"
+              ) : (
+                "Ingresar"
+              )}
             </Button>
           </Form>
 
