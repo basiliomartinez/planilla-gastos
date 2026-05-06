@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 
+import Login from "./components/auth/Login";
+
 import NavbarPrincipal from "./components/layout/NavbarPrincipal";
 import FooterPrincipal from "./components/layout/FooterPrincipal";
 
@@ -25,13 +27,24 @@ import "./styles/gastos.css";
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
 
+  const [usuarioLogueado, setUsuarioLogueado] = useState(
+    JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
+  );
+
+  const [mensajeSesion, setMensajeSesion] = useState("");
+  const [cargando, setCargando] = useState(false);
+
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
   const [cuotas, setCuotas] = useState([]);
 
   useEffect(() => {
+    if (!usuarioLogueado?.token) return;
+
     const cargarDatos = async () => {
+      setCargando(true);
+
       try {
         const mensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
@@ -46,19 +59,71 @@ const App = () => {
         setCuotas(cuotasData);
       } catch (error) {
         console.error("Error al cargar datos:", error);
+      } finally {
+        setCargando(false);
       }
     };
 
     cargarDatos();
+  }, [usuarioLogueado]);
+
+  useEffect(() => {
+    const manejarSesionExpirada = () => {
+      setUsuarioLogueado({});
+      setMensajeSesion("Tu sesión expiró. Volvé a iniciar sesión.");
+      setGastosPendientes([]);
+      setGastosPagados([]);
+      setGastosFuturos([]);
+      setCuotas([]);
+      setCargando(false);
+    };
+
+    window.addEventListener("sesionExpirada", manejarSesionExpirada);
+
+    return () => {
+      window.removeEventListener("sesionExpirada", manejarSesionExpirada);
+    };
   }, []);
 
-  // ===== TOTALES =====
+  const cerrarSesion = () => {
+    sessionStorage.removeItem("usuarioKey");
+    setUsuarioLogueado({});
+    setMensajeSesion("");
+    setGastosPendientes([]);
+    setGastosPagados([]);
+    setGastosFuturos([]);
+    setCuotas([]);
+    setCargando(false);
+  };
+
+  if (!usuarioLogueado?.token) {
+    return (
+      <Login
+        setUsuarioLogueado={setUsuarioLogueado}
+        mensajeSesion={mensajeSesion}
+        setMensajeSesion={setMensajeSesion}
+      />
+    );
+  }
+
+  if (cargando) {
+    return (
+      <div
+        className="app-layout gastos-bg d-flex justify-content-center align-items-center"
+        style={{ minHeight: "100vh" }}
+      >
+        <div className="text-center text-light">
+          <div className="spinner-border mb-3" role="status"></div>
+          <p>Cargando datos...</p>
+        </div>
+      </div>
+    );
+  }
+
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
     0
   );
-
-  // ===== GASTOS =====
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
@@ -156,8 +221,6 @@ const App = () => {
     setGastosPendientes([...gastosPendientes, resp.gasto]);
   };
 
-  // ===== CUOTAS =====
-
   const agregarCuota = async (nuevaCuota) => {
     const resp = await crearCuotaApi(nuevaCuota);
 
@@ -181,8 +244,6 @@ const App = () => {
     await eliminarCuotaApi(id);
     setCuotas(cuotas.filter((c) => c._id !== id));
   };
-
-  // ===== RENDER =====
 
   const renderSeccion = () => {
     switch (seccionActiva) {
@@ -227,6 +288,8 @@ const App = () => {
       <NavbarPrincipal
         seccionActiva={seccionActiva}
         setSeccionActiva={setSeccionActiva}
+        usuarioLogueado={usuarioLogueado}
+        cerrarSesion={cerrarSesion}
       />
 
       <main className="main-content">
