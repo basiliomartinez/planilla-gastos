@@ -54,10 +54,25 @@ export const registroApi = async (usuario) => {
       body: JSON.stringify(usuario),
     });
 
-    return await handleResponse(res);
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        mensaje: data.mensaje || "Error al registrar usuario",
+      };
+    }
+
+    return {
+      ok: true,
+      ...data,
+    };
   } catch (error) {
     console.error("Error al registrar usuario:", error);
-    return {};
+    return {
+      ok: false,
+      mensaje: "No se pudo conectar con el servidor",
+    };
   }
 };
 
