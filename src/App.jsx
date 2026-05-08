@@ -20,6 +20,7 @@ import {
   crearCuotaApi,
   pagarCuotaApi,
   eliminarCuotaApi,
+  editarGastoApi,
 } from "./helpers/queries";
 
 import "./styles/gastos.css";
@@ -159,6 +160,28 @@ const App = () => {
     }
   };
 
+  const editarGasto = async (id, gastoEditado) => {
+    const resp = await editarGastoApi(id, gastoEditado);
+
+    if (!resp.gasto) {
+      return { ok: false, msg: "No se pudo editar el gasto" };
+    }
+
+    setGastosPendientes(
+      gastosPendientes.map((g) => (g._id === id ? resp.gasto : g))
+    );
+
+    setGastosFuturos(
+      gastosFuturos.map((g) => (g._id === id ? resp.gasto : g))
+    );
+
+    setGastosPagados(
+      gastosPagados.map((g) => (g._id === id ? resp.gasto : g))
+    );
+
+    return { ok: true };
+  };
+
   const agregarGastoFuturo = async (nuevoGasto) => {
     const existe = gastosFuturos.some(
       (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
@@ -253,6 +276,7 @@ const App = () => {
             gastosPendientes={gastosPendientes}
             gastosPagados={gastosPagados}
             agregarGasto={agregarGasto}
+            editarGasto={editarGasto}
             marcarComoPagado={marcarComoPagado}
             eliminarPagado={eliminarPagado}
             totalPendiente={totalPendiente}
