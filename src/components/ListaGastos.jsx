@@ -1,20 +1,26 @@
 import { ListGroup, Alert } from "react-bootstrap";
 import ItemGasto from "./ItemGasto";
 
-const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion }) => {
+const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion, onEditar }) => {
   const hoyISO = new Date().toISOString().slice(0, 10);
+
+  const normalizarFecha = (fecha) => {
+    if (!fecha) return "";
+    return fecha.includes("T") ? fecha.split("T")[0] : fecha;
+  };
 
   const gastosOrdenados =
     tipo === "pendiente"
       ? [...arrayGastos].sort((a, b) => {
-          const aVencido = a.vencimiento < hoyISO;
-          const bVencido = b.vencimiento < hoyISO;
+          const fechaA = normalizarFecha(a.vencimiento);
+          const fechaB = normalizarFecha(b.vencimiento);
 
-          // 1) Vencidos primero
+          const aVencido = fechaA < hoyISO;
+          const bVencido = fechaB < hoyISO;
+
           if (aVencido !== bVencido) return aVencido ? -1 : 1;
 
-          // 2) Luego por fecha de vencimiento (más próximo primero)
-          return a.vencimiento.localeCompare(b.vencimiento);
+          return fechaA.localeCompare(fechaB);
         })
       : arrayGastos;
 
@@ -32,6 +38,7 @@ const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion }) => {
               gasto={gasto}
               tipo={tipo}
               onAccion={onAccion}
+              onEditar={onEditar}
             />
           ))}
         </ListGroup>

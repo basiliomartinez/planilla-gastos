@@ -1,60 +1,93 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Form, Row, Col, Alert } from "react-bootstrap";
 
-const FormularioGasto = ({ agregarGasto }) => {
+const fechaHoy = () => new Date().toISOString().slice(0, 10);
+
+const normalizarFecha = (fecha) => {
+  if (!fecha) return fechaHoy();
+  return fecha.includes("T") ? fecha.split("T")[0] : fecha;
+};
+
+const FormularioGasto = ({
+  agregarGasto,
+  editarGasto,
+  gastoEditando,
+  cancelarEdicion,
+}) => {
   const [nombre, setNombre] = useState("");
   const [monto, setMonto] = useState("");
-const [vencimiento, setVencimiento] = useState(new Date().toISOString().slice(0, 10));
+  const [vencimiento, setVencimiento] = useState(fechaHoy());
   const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (gastoEditando) {
+      setNombre(gastoEditando.nombre);
+      setMonto(String(gastoEditando.monto));
+      setVencimiento(normalizarFecha(gastoEditando.vencimiento));
+      setError("");
+    }
+  }, [gastoEditando]);
+
+  const limpiarFormulario = () => {
+    setNombre("");
+    setMonto("");
+    setVencimiento(fechaHoy());
+    setError("");
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // 1) Nombre obligatorio
     if (nombre.trim() === "") {
       setError("El nombre del gasto es obligatorio.");
       return;
     }
 
-    // 2) Monto obligatorio y > 0
     const montoNumero = Number(monto);
+
     if (monto === "" || Number.isNaN(montoNumero) || montoNumero <= 0) {
       setError("El monto debe ser un número mayor a 0.");
       return;
     }
 
-    // 3) Fecha obligatoria
     if (vencimiento === "") {
       setError("La fecha de vencimiento es obligatoria.");
       return;
     }
 
-    const nuevoGasto = {
-      id: crypto.randomUUID(),
+    const gasto = {
       nombre: nombre.trim(),
       monto: montoNumero,
       vencimiento,
     };
 
-    // 4) Validación de duplicados (la decide App)
-    const resultado = agregarGasto(nuevoGasto);
+    const resultado = gastoEditando
+      ? await editarGasto(gastoEditando._id, gasto)
+      : await agregarGasto(gasto);
 
     if (!resultado.ok) {
       setError(resultado.msg);
       return;
     }
 
-    // Si salió todo bien, limpio el form
-   setNombre("");
-setMonto("");
-setVencimiento(new Date().toISOString().slice(0, 10));
+    limpiarFormulario();
 
+    if (gastoEditando) {
+      cancelarEdicion();
+    }
+  };
+
+  const handleCancelar = () => {
+    limpiarFormulario();
+    cancelarEdicion();
   };
 
   return (
     <section>
-      <h2 className="h4 mb-3">Agregar gasto</h2>
+      <h2 className="h4 mb-3">
+        {gastoEditando ? "Editar gasto" : "Agregar gasto"}
+      </h2>
 
       {error && <Alert variant="warning">{error}</Alert>}
 
@@ -97,10 +130,18 @@ setVencimiento(new Date().toISOString().slice(0, 10));
 
           <Col md={1} className="d-flex align-items-end">
             <Button type="submit" className="w-100 btn-add">
-              +
+              {gastoEditando ? "✓" : "+"}
             </Button>
           </Col>
         </Row>
+
+        {gastoEditando && (
+          <div className="mt-3">
+            <Button variant="outline-secondary" size="sm" onClick={handleCancelar}>
+              Cancelar edición
+            </Button>
+          </div>
+        )}
       </Form>
     </section>
   );

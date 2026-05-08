@@ -24,8 +24,7 @@ const formatearDiaMes = (fecha) => {
 
   return fecha;
 };
-
-const ItemGasto = ({ gasto, tipo, onAccion }) => {
+const ItemGasto = ({ gasto, tipo, onAccion, onEditar }) => {
   const esPagado = tipo === "pagado";
   const hoyISO = new Date().toISOString().slice(0, 10);
 
@@ -54,9 +53,11 @@ const ItemGasto = ({ gasto, tipo, onAccion }) => {
         </div>
 
         {!esPagado ? (
-     <small className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}>
-  Vence: {formatearDiaMes(gasto.vencimiento)}
-</small>
+          <small
+            className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}
+          >
+            Vence: {formatearDiaMes(gasto.vencimiento)}
+          </small>
         ) : (
           <small className="text-success">
             Gasto pagado el {formatearDiaMes(gasto.fechaPago)}
@@ -66,17 +67,21 @@ const ItemGasto = ({ gasto, tipo, onAccion }) => {
 
       <div className="d-flex align-items-center gap-2">
         <strong
-          className={
-            esPagado ? "text-success" : esVencido ? "text-danger" : ""
-          }
+          className={esPagado ? "text-success" : esVencido ? "text-danger" : ""}
         >
           ${gasto.monto.toLocaleString("es-AR")}
         </strong>
 
         {!esPagado ? (
-          <Button variant="danger" onClick={() => onAccion(gasto._id)}>
-            A pagar
-          </Button>
+          <>
+            <Button variant="outline-warning" onClick={() => onEditar(gasto)}>
+              Editar
+            </Button>
+
+            <Button variant="danger" onClick={() => onAccion(gasto._id)}>
+              A pagar
+            </Button>
+          </>
         ) : (
           <>
             <Badge bg="success">Pagado</Badge>

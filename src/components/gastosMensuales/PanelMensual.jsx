@@ -1,3 +1,4 @@
+import { useState } from "react";
 import FormularioGasto from "../FormularioGasto";
 import ListaGastos from "../ListaGastos";
 
@@ -5,10 +6,17 @@ const PanelMensual = ({
   gastosPendientes,
   gastosPagados,
   agregarGasto,
+  editarGasto,
   marcarComoPagado,
   eliminarPagado,
   totalPendiente,
 }) => {
+  const [gastoEditando, setGastoEditando] = useState(null);
+
+  const cancelarEdicion = () => {
+    setGastoEditando(null);
+  };
+
   return (
     <>
       <div className="calc-display">
@@ -24,7 +32,12 @@ const PanelMensual = ({
       </div>
 
       <div className="calc-body">
-        <FormularioGasto agregarGasto={agregarGasto} />
+        <FormularioGasto
+          agregarGasto={agregarGasto}
+          editarGasto={editarGasto}
+          gastoEditando={gastoEditando}
+          cancelarEdicion={cancelarEdicion}
+        />
 
         <h2 className="section-title">Pendientes</h2>
         <div className="list-soft">
@@ -33,6 +46,7 @@ const PanelMensual = ({
             arrayGastos={gastosPendientes}
             tipo="pendiente"
             onAccion={marcarComoPagado}
+            onEditar={setGastoEditando}
           />
         </div>
 
