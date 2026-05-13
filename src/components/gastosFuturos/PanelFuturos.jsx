@@ -1,17 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Form, Row, Col, Alert, ListGroup } from "react-bootstrap";
+
+const normalizarFecha = (fecha) => {
+  if (!fecha) return "";
+  return fecha.includes("T") ? fecha.split("T")[0] : fecha;
+};
 
 const PanelFuturos = ({
   gastosFuturos,
   agregarGastoFuturo,
+  editarGasto,
   pasarFuturoAMensual,
 }) => {
   const [nombre, setNombre] = useState("");
   const [monto, setMonto] = useState("");
   const [vencimiento, setVencimiento] = useState("");
+  const [gastoEditando, setGastoEditando] = useState(null);
   const [error, setError] = useState("");
 
   const totalFuturo = gastosFuturos.reduce((acc, gasto) => acc + gasto.monto, 0);
+
+  useEffect(() => {
+    if (gastoEditando) {
+      setNombre(gastoEditando.nombre);
+      setMonto(String(gastoEditando.monto));
+      setVencimiento(normalizarFecha(gastoEditando.vencimiento));
+      setError("");
+    }
+  }, [gastoEditando]);
+
+  const limpiarFormulario = () => {
+    setNombre("");
+    setMonto("");
+    setVencimiento("");
+    setError("");
+  };
+
+  const cancelarEdicion = () => {
+    setGastoEditando(null);
+    limpiarFormulario();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,6 +51,7 @@ const PanelFuturos = ({
     }
 
     const montoNumero = Number(monto);
+
     if (monto === "" || Number.isNaN(montoNumero) || montoNumero <= 0) {
       setError("El monto debe ser un número mayor a 0.");
       return;
@@ -33,20 +62,26 @@ const PanelFuturos = ({
       return;
     }
 
-    const resultado = await agregarGastoFuturo({
+    const datosGasto = {
       nombre: nombre.trim(),
       monto: montoNumero,
       vencimiento,
-    });
+    };
+
+    const resultado = gastoEditando
+      ? await editarGasto(gastoEditando._id, datosGasto)
+      : await agregarGastoFuturo(datosGasto);
 
     if (!resultado.ok) {
       setError(resultado.msg);
       return;
     }
 
-    setNombre("");
-    setMonto("");
-    setVencimiento("");
+    limpiarFormulario();
+
+    if (gastoEditando) {
+      setGastoEditando(null);
+    }
   };
 
   const formatearDiaMes = (fecha) => {
@@ -60,17 +95,19 @@ const PanelFuturos = ({
     <>
       <div className="calc-display calc-display-futuros">
         <p className="calc-title">Gastos futuros</p>
+
         <p className="calc-amount calc-amount-futuros">
           ${totalFuturo.toLocaleString("es-AR")}
         </p>
-        <div className="calc-sub">
-          {gastosFuturos.length} gasto(s) futuros
-        </div>
+
+        <div className="calc-sub">{gastosFuturos.length} gasto(s) futuros</div>
       </div>
 
       <div className="calc-body">
         <section>
-          <h2 className="section-title">Agregar gasto futuro</h2>
+          <h2 className="section-title">
+            {gastoEditando ? "Editar gasto futuro" : "Agregar gasto futuro"}
+          </h2>
 
           {error && <Alert variant="warning">{error}</Alert>}
 
@@ -113,10 +150,22 @@ const PanelFuturos = ({
 
               <Col md={1} className="d-flex align-items-end">
                 <Button type="submit" className="w-100 btn-add">
-                  +
+                  {gastoEditando ? "✓" : "+"}
                 </Button>
               </Col>
             </Row>
+
+            {gastoEditando && (
+              <div className="mt-3">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={cancelarEdicion}
+                >
+                  Cancelar edición
+                </Button>
+              </div>
+            )}
           </Form>
         </section>
 
@@ -139,10 +188,17 @@ const PanelFuturos = ({
                     </small>
                   </div>
 
-                  <div className="d-flex align-items-center gap-2">
+                  <div className="d-flex align-items-center gap-2 flex-wrap">
                     <strong className="text-light">
                       ${gasto.monto.toLocaleString("es-AR")}
                     </strong>
+
+                    <Button
+                      variant="outline-warning"
+                      onClick={() => setGastoEditando(gasto)}
+                    >
+                      Editar
+                    </Button>
 
                     <Button
                       variant="outline-light"
