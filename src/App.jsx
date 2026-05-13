@@ -298,11 +298,12 @@ const editarCuota = async (id, cuotaEditada) => {
 
       case "futuros":
         return (
-          <PanelFuturos
-            gastosFuturos={gastosFuturos}
-            agregarGastoFuturo={agregarGastoFuturo}
-            pasarFuturoAMensual={pasarFuturoAMensual}
-          />
+      <PanelFuturos
+  gastosFuturos={gastosFuturos}
+  agregarGastoFuturo={agregarGastoFuturo}
+  editarGasto={editarGasto}
+  pasarFuturoAMensual={pasarFuturoAMensual}
+/>
         );
 
       case "cuotas":
