@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Form,
@@ -9,14 +9,41 @@ import {
   Badge,
 } from "react-bootstrap";
 
-const PanelCuotas = ({ cuotas, agregarCuota, pagarCuota, eliminarCuota }) => {
+const PanelCuotas = ({
+  cuotas,
+  agregarCuota,
+  editarCuota,
+  pagarCuota,
+  eliminarCuota,
+}) => {
   const [articulo, setArticulo] = useState("");
   const [precioTotal, setPrecioTotal] = useState("");
   const [cantidadCuotas, setCantidadCuotas] = useState("");
+  const [cuotaEditando, setCuotaEditando] = useState(null);
   const [error, setError] = useState("");
 
-  // TOTAL DEUDA
   const totalDeuda = cuotas.reduce((acc, c) => acc + (c.deudaPendiente || 0), 0);
+
+  useEffect(() => {
+    if (cuotaEditando) {
+      setArticulo(cuotaEditando.articulo);
+      setPrecioTotal(String(cuotaEditando.precioTotal));
+      setCantidadCuotas(String(cuotaEditando.cantidadCuotas));
+      setError("");
+    }
+  }, [cuotaEditando]);
+
+  const limpiarFormulario = () => {
+    setArticulo("");
+    setPrecioTotal("");
+    setCantidadCuotas("");
+    setError("");
+  };
+
+  const cancelarEdicion = () => {
+    setCuotaEditando(null);
+    limpiarFormulario();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,43 +69,52 @@ const PanelCuotas = ({ cuotas, agregarCuota, pagarCuota, eliminarCuota }) => {
 
     const valorCuota = Number((precio / cuotasCant).toFixed(2));
 
-    const resultado = await agregarCuota({
+    const datosCuota = {
       articulo: articulo.trim(),
       precioTotal: precio,
       cantidadCuotas: cuotasCant,
-      cuotasPagadas: 0,
       valorCuota,
-    });
+    };
+
+    const resultado = cuotaEditando
+      ? await editarCuota(cuotaEditando._id, datosCuota)
+      : await agregarCuota({
+          ...datosCuota,
+          cuotasPagadas: 0,
+        });
 
     if (!resultado.ok) {
       setError(resultado.msg);
       return;
     }
 
-    setArticulo("");
-    setPrecioTotal("");
-    setCantidadCuotas("");
+    limpiarFormulario();
+
+    if (cuotaEditando) {
+      setCuotaEditando(null);
+    }
   };
 
   return (
     <>
-      {/* DISPLAY SUPERIOR */}
       <div className="calc-display calc-display-cuotas">
         <p className="calc-title">Gastos en cuotas</p>
+
         <p className="calc-amount calc-amount-cuotas">
           ${totalDeuda.toLocaleString("es-AR", {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}
         </p>
+
         <div className="calc-sub">{cuotas.length} producto(s) en cuotas</div>
       </div>
 
-      {/* BODY */}
       <div className="calc-body">
-        {/* FORM */}
         <section>
-          <h2 className="section-title">Agregar compra en cuotas</h2>
+          <h2 className="section-title">
+            {cuotaEditando ? "Editar compra en cuotas" : "Agregar compra en cuotas"}
+          </h2>
 
           {error && <Alert variant="warning">{error}</Alert>}
 
@@ -112,14 +148,25 @@ const PanelCuotas = ({ cuotas, agregarCuota, pagarCuota, eliminarCuota }) => {
 
               <Col md={2}>
                 <Button type="submit" className="w-100 btn-add">
-                  +
+                  {cuotaEditando ? "✓" : "+"}
                 </Button>
               </Col>
             </Row>
+
+            {cuotaEditando && (
+              <div className="mt-3">
+                <Button
+                  variant="outline-secondary"
+                  size="sm"
+                  onClick={cancelarEdicion}
+                >
+                  Cancelar edición
+                </Button>
+              </div>
+            )}
           </Form>
         </section>
 
-        {/* LISTADO */}
         <div className="paid-block">
           <h2 className="section-title">Listado de cuotas</h2>
 
@@ -172,7 +219,15 @@ const PanelCuotas = ({ cuotas, agregarCuota, pagarCuota, eliminarCuota }) => {
                     )}
                   </div>
 
-                  <div className="d-flex gap-2">
+                  <div className="d-flex gap-2 flex-wrap">
+                    <Button
+                      variant="outline-warning"
+                      onClick={() => setCuotaEditando(c)}
+                      disabled={c.estado === "finalizada"}
+                    >
+                      Editar
+                    </Button>
+
                     <Button
                       variant="primary"
                       onClick={() => pagarCuota(c._id)}

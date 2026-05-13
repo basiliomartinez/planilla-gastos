@@ -21,6 +21,7 @@ import {
   pagarCuotaApi,
   eliminarCuotaApi,
   editarGastoApi,
+  editarCuotaApi,
 } from "./helpers/queries";
 
 import "./styles/gastos.css";
@@ -255,6 +256,18 @@ const App = () => {
     return { ok: false, msg: "No se pudo crear cuota" };
   };
 
+const editarCuota = async (id, cuotaEditada) => {
+  const resp = await editarCuotaApi(id, cuotaEditada);
+
+  if (!resp.cuota) {
+    return { ok: false, msg: "No se pudo editar la cuota" };
+  }
+
+  setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
+
+  return { ok: true };
+};
+
   const pagarCuota = async (id) => {
     const resp = await pagarCuotaApi(id);
 
@@ -294,12 +307,13 @@ const App = () => {
 
       case "cuotas":
         return (
-          <PanelCuotas
-            cuotas={cuotas}
-            agregarCuota={agregarCuota}
-            pagarCuota={pagarCuota}
-            eliminarCuota={eliminarCuota}
-          />
+        <PanelCuotas
+  cuotas={cuotas}
+  agregarCuota={agregarCuota}
+  editarCuota={editarCuota}
+  pagarCuota={pagarCuota}
+  eliminarCuota={eliminarCuota}
+/>
         );
 
       default:
