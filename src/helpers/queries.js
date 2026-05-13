@@ -108,6 +108,21 @@ export const crearGastoApi = async (gasto) => {
   }
 };
 
+export const editarGastoApi = async (id, gasto) => {
+  try {
+    const res = await fetch(`${API_URL}/gastos/editar/${id}`, {
+      method: "PUT",
+      headers: headersConToken(),
+      body: JSON.stringify(gasto),
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al editar gasto:", error);
+    return {};
+  }
+};
+
 export const pagarGastoApi = async (id) => {
   try {
     const res = await fetch(`${API_URL}/gastos/${id}`, {
@@ -176,6 +191,21 @@ export const crearCuotaApi = async (cuota) => {
     return await handleResponse(res);
   } catch (error) {
     console.error("Error al crear cuota:", error);
+    return {};
+  }
+};
+
+export const editarCuotaApi = async (id, cuota) => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas/editar/${id}`, {
+      method: "PUT",
+      headers: headersConToken(),
+      body: JSON.stringify(cuota),
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al editar cuota:", error);
     return {};
   }
 };
