@@ -195,6 +195,21 @@ export const crearCuotaApi = async (cuota) => {
   }
 };
 
+export const editarCuotaApi = async (id, cuota) => {
+  try {
+    const res = await fetch(`${API_URL}/cuotas/editar/${id}`, {
+      method: "PUT",
+      headers: headersConToken(),
+      body: JSON.stringify(cuota),
+    });
+
+    return await handleResponse(res);
+  } catch (error) {
+    console.error("Error al editar cuota:", error);
+    return {};
+  }
+};
+
 export const pagarCuotaApi = async (id) => {
   try {
     const res = await fetch(`${API_URL}/cuotas/${id}`, {
