@@ -49,16 +49,17 @@ const PanelMensual = ({
           cancelarEdicion={cancelarEdicion}
         />
 
-        <section className="mb-4">
-          <h2 className="section-title">Buscar gasto</h2>
+    <section className="mb-4">
+  <h2 className="section-title">Buscar gasto</h2>
 
-          <Form.Control
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </section>
+  <Form.Control
+    type="text"
+    className="buscador-gastos"
+    placeholder="🔎 Buscar por nombre..."
+    value={busqueda}
+    onChange={(e) => setBusqueda(e.target.value)}
+  />
+</section>
 
         <h2 className="section-title">Pendientes</h2>
         <div className="list-soft">
