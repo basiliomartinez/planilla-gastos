@@ -17,8 +17,11 @@ const PanelFuturos = ({
   const [vencimiento, setVencimiento] = useState("");
   const [gastoEditando, setGastoEditando] = useState(null);
   const [error, setError] = useState("");
-
+const [busqueda, setBusqueda] = useState("");
   const totalFuturo = gastosFuturos.reduce((acc, gasto) => acc + gasto.monto, 0);
+const gastosFiltrados = gastosFuturos.filter((gasto) =>
+  gasto.nombre.toLowerCase().includes(busqueda.toLowerCase())
+);
 
   useEffect(() => {
     if (gastoEditando) {
@@ -168,6 +171,17 @@ const PanelFuturos = ({
             )}
           </Form>
         </section>
+<section className="mb-4">
+  <h2 className="section-title">Buscar gasto futuro</h2>
+
+  <Form.Control
+    type="text"
+    className="buscador-gastos"
+    placeholder="🔎 Buscar por nombre..."
+    value={busqueda}
+    onChange={(e) => setBusqueda(e.target.value)}
+  />
+</section>
 
         <div className="paid-block">
           <h2 className="section-title">Listado de futuros</h2>
@@ -176,7 +190,7 @@ const PanelFuturos = ({
             <Alert variant="info">No hay gastos futuros cargados.</Alert>
           ) : (
             <ListGroup>
-              {gastosFuturos.map((gasto) => (
+              {gastosFiltrados.map((gasto) => (
                 <div
                   key={gasto._id}
                   className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2"
