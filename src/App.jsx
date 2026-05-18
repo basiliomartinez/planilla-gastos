@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
+import Swal from "sweetalert2";
 
 import Login from "./components/auth/Login";
 
@@ -214,8 +215,18 @@ const App = () => {
     const gasto = gastosPendientes.find((g) => g._id === id);
     if (!gasto) return;
 
-    const confirmar = window.confirm(`¿Pagaste "${gasto.nombre}"?`);
-    if (!confirmar) return;
+    const confirmar = await Swal.fire({
+      title: "¿Confirmás el pago?",
+      text: `Vas a marcar "${gasto.nombre}" como pagado.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, pagar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#198754",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
 
     const resp = await pagarGastoApi(id);
 
@@ -223,19 +234,43 @@ const App = () => {
 
     setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
     setGastosPagados([resp.gasto, ...gastosPagados]);
+
+    Swal.fire("Listo", "El gasto fue marcado como pagado.", "success");
   };
 
   const eliminarPagado = async (id) => {
-    const confirmar = window.confirm("¿Eliminar gasto?");
-    if (!confirmar) return;
+    const confirmar = await Swal.fire({
+      title: "¿Eliminar gasto?",
+      text: "Se eliminará del historial de pagados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
 
     await eliminarGastoApi(id);
     setGastosPagados(gastosPagados.filter((g) => g._id !== id));
+
+    Swal.fire("Eliminado", "El gasto fue eliminado correctamente.", "success");
   };
 
   const pasarFuturoAMensual = async (id) => {
-    const confirmar = window.confirm("¿Pasar a mensual?");
-    if (!confirmar) return;
+    const confirmar = await Swal.fire({
+      title: "¿Pasar a mensual?",
+      text: "Este gasto futuro se moverá a gastos mensuales.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, pasar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#0d6efd",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
 
     const resp = await pasarGastoFuturoAMensualApi(id);
 
@@ -243,6 +278,8 @@ const App = () => {
 
     setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
     setGastosPendientes([...gastosPendientes, resp.gasto]);
+
+    Swal.fire("Listo", "El gasto fue pasado a mensuales.", "success");
   };
 
   const agregarCuota = async (nuevaCuota) => {
@@ -256,17 +293,17 @@ const App = () => {
     return { ok: false, msg: "No se pudo crear cuota" };
   };
 
-const editarCuota = async (id, cuotaEditada) => {
-  const resp = await editarCuotaApi(id, cuotaEditada);
+  const editarCuota = async (id, cuotaEditada) => {
+    const resp = await editarCuotaApi(id, cuotaEditada);
 
-  if (!resp.cuota) {
-    return { ok: false, msg: "No se pudo editar la cuota" };
-  }
+    if (!resp.cuota) {
+      return { ok: false, msg: "No se pudo editar la cuota" };
+    }
 
-  setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
+    setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
 
-  return { ok: true };
-};
+    return { ok: true };
+  };
 
   const pagarCuota = async (id) => {
     const resp = await pagarCuotaApi(id);
@@ -277,8 +314,23 @@ const editarCuota = async (id, cuotaEditada) => {
   };
 
   const eliminarCuota = async (id) => {
+    const confirmar = await Swal.fire({
+      title: "¿Eliminar cuota?",
+      text: "Se eliminará esta compra en cuotas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
+
     await eliminarCuotaApi(id);
     setCuotas(cuotas.filter((c) => c._id !== id));
+
+    Swal.fire("Eliminada", "La cuota fue eliminada correctamente.", "success");
   };
 
   const renderSeccion = () => {
@@ -298,23 +350,23 @@ const editarCuota = async (id, cuotaEditada) => {
 
       case "futuros":
         return (
-      <PanelFuturos
-  gastosFuturos={gastosFuturos}
-  agregarGastoFuturo={agregarGastoFuturo}
-  editarGasto={editarGasto}
-  pasarFuturoAMensual={pasarFuturoAMensual}
-/>
+          <PanelFuturos
+            gastosFuturos={gastosFuturos}
+            agregarGastoFuturo={agregarGastoFuturo}
+            editarGasto={editarGasto}
+            pasarFuturoAMensual={pasarFuturoAMensual}
+          />
         );
 
       case "cuotas":
         return (
-        <PanelCuotas
-  cuotas={cuotas}
-  agregarCuota={agregarCuota}
-  editarCuota={editarCuota}
-  pagarCuota={pagarCuota}
-  eliminarCuota={eliminarCuota}
-/>
+          <PanelCuotas
+            cuotas={cuotas}
+            agregarCuota={agregarCuota}
+            editarCuota={editarCuota}
+            pagarCuota={pagarCuota}
+            eliminarCuota={eliminarCuota}
+          />
         );
 
       default:
