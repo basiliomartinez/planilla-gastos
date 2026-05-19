@@ -10,6 +10,8 @@ import FooterPrincipal from "./components/layout/FooterPrincipal";
 import PanelMensual from "./components/gastosMensuales/PanelMensual";
 import PanelFuturos from "./components/gastosFuturos/PanelFuturos";
 import PanelCuotas from "./components/gastosCuotas/PanelCuotas";
+import ResumenCards from "./components/dashboard/ResumenCards";
+import PanelHistorial from "./components/historial/PanelHistorial";
 
 import {
   listarGastosApi,
@@ -127,6 +129,20 @@ const App = () => {
     (acc, gasto) => acc + gasto.monto,
     0
   );
+const totalFuturos = gastosFuturos.reduce(
+  (acc, gasto) => acc + gasto.monto,
+  0
+);
+
+const totalPagados = gastosPagados.reduce(
+  (acc, gasto) => acc + gasto.monto,
+  0
+);
+
+const deudaCuotas = cuotas.reduce(
+  (acc, cuota) => acc + cuota.deudaPendiente,
+  0
+);
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
@@ -368,6 +384,10 @@ const App = () => {
             eliminarCuota={eliminarCuota}
           />
         );
+case "historial":
+  return (
+    <PanelHistorial gastosPagados={gastosPagados} />
+  );
 
       default:
         return null;
@@ -386,6 +406,12 @@ const App = () => {
       <main className="main-content">
         <Container className="py-2 py-md-4">
           <div className="calc-shell">
+            <ResumenCards
+  totalPendiente={totalPendiente}
+  totalFuturos={totalFuturos}
+  deudaCuotas={deudaCuotas}
+  totalPagados={totalPagados}
+/>
             <div className="calc-card">{renderSeccion()}</div>
           </div>
         </Container>
