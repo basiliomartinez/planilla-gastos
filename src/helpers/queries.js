@@ -78,9 +78,23 @@ export const registroApi = async (usuario) => {
 
 // ===== GASTOS =====
 
-export const listarGastosApi = async (tipo = "") => {
+export const listarGastosApi = async (tipo = "", periodo = "") => {
   try {
-    const url = tipo ? `${API_URL}/gastos?tipo=${tipo}` : `${API_URL}/gastos`;
+    let url = `${API_URL}/gastos`;
+
+    const params = new URLSearchParams();
+
+    if (tipo) {
+      params.append("tipo", tipo);
+    }
+
+    if (periodo) {
+      params.append("periodo", periodo);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
 
     const res = await fetch(url, {
       headers: headersConToken(),

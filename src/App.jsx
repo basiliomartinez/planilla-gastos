@@ -31,9 +31,11 @@ import "./styles/gastos.css";
 
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
-
+  const [periodoActivo, setPeriodoActivo] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
   const [usuarioLogueado, setUsuarioLogueado] = useState(
-    JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
+    JSON.parse(sessionStorage.getItem("usuarioKey")) || {},
   );
 
   const [mensajeSesion, setMensajeSesion] = useState("");
@@ -51,7 +53,11 @@ const App = () => {
       setCargando(true);
 
       try {
-        const mensuales = await listarGastosApi("mensual");
+        const mensuales = await listarGastosApi(
+          "mensual",
+
+          periodoActivo,
+        );
         const futuros = await listarGastosApi("futuro");
         const cuotasData = await listarCuotasApi();
 
@@ -70,7 +76,7 @@ const App = () => {
     };
 
     cargarDatos();
-  }, [usuarioLogueado]);
+  }, [usuarioLogueado, periodoActivo]);
 
   useEffect(() => {
     const manejarSesionExpirada = () => {
@@ -99,6 +105,7 @@ const App = () => {
     setGastosFuturos([]);
     setCuotas([]);
     setCargando(false);
+    setPeriodoActivo(new Date().toISOString().slice(0, 7));
   };
 
   if (!usuarioLogueado?.token) {
@@ -127,30 +134,30 @@ const App = () => {
 
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
-    0
+    0,
   );
-const totalFuturos = gastosFuturos.reduce(
-  (acc, gasto) => acc + gasto.monto,
-  0
-);
+  const totalFuturos = gastosFuturos.reduce(
+    (acc, gasto) => acc + gasto.monto,
+    0,
+  );
 
-const totalPagados = gastosPagados.reduce(
-  (acc, gasto) => acc + gasto.monto,
-  0
-);
+  const totalPagados = gastosPagados.reduce(
+    (acc, gasto) => acc + gasto.monto,
+    0,
+  );
 
-const deudaCuotas = cuotas.reduce(
-  (acc, cuota) => acc + cuota.deudaPendiente,
-  0
-);
+  const deudaCuotas = cuotas.reduce(
+    (acc, cuota) => acc + cuota.deudaPendiente,
+    0,
+  );
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     const existePagado = gastosPagados.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     if (existePendiente || existePagado) {
@@ -164,6 +171,7 @@ const deudaCuotas = cuotas.reduce(
       const resp = await crearGastoApi({
         ...nuevoGasto,
         tipo: "mensual",
+         periodo: periodoActivo,
       });
 
       if (resp.gasto) {
@@ -186,23 +194,19 @@ const deudaCuotas = cuotas.reduce(
     }
 
     setGastosPendientes(
-      gastosPendientes.map((g) => (g._id === id ? resp.gasto : g))
+      gastosPendientes.map((g) => (g._id === id ? resp.gasto : g)),
     );
 
-    setGastosFuturos(
-      gastosFuturos.map((g) => (g._id === id ? resp.gasto : g))
-    );
+    setGastosFuturos(gastosFuturos.map((g) => (g._id === id ? resp.gasto : g)));
 
-    setGastosPagados(
-      gastosPagados.map((g) => (g._id === id ? resp.gasto : g))
-    );
+    setGastosPagados(gastosPagados.map((g) => (g._id === id ? resp.gasto : g)));
 
     return { ok: true };
   };
 
   const agregarGastoFuturo = async (nuevoGasto) => {
     const existe = gastosFuturos.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     if (existe) {
@@ -353,15 +357,17 @@ const deudaCuotas = cuotas.reduce(
     switch (seccionActiva) {
       case "mensuales":
         return (
-          <PanelMensual
-            gastosPendientes={gastosPendientes}
-            gastosPagados={gastosPagados}
-            agregarGasto={agregarGasto}
-            editarGasto={editarGasto}
-            marcarComoPagado={marcarComoPagado}
-            eliminarPagado={eliminarPagado}
-            totalPendiente={totalPendiente}
-          />
+        <PanelMensual
+  gastosPendientes={gastosPendientes}
+  gastosPagados={gastosPagados}
+  agregarGasto={agregarGasto}
+  editarGasto={editarGasto}
+  marcarComoPagado={marcarComoPagado}
+  eliminarPagado={eliminarPagado}
+  totalPendiente={totalPendiente}
+  periodoActivo={periodoActivo}
+  setPeriodoActivo={setPeriodoActivo}
+/>
         );
 
       case "futuros":
@@ -384,10 +390,8 @@ const deudaCuotas = cuotas.reduce(
             eliminarCuota={eliminarCuota}
           />
         );
-case "historial":
-  return (
-    <PanelHistorial gastosPagados={gastosPagados} />
-  );
+      case "historial":
+        return <PanelHistorial gastosPagados={gastosPagados} />;
 
       default:
         return null;
@@ -407,11 +411,11 @@ case "historial":
         <Container className="py-2 py-md-4">
           <div className="calc-shell">
             <ResumenCards
-  totalPendiente={totalPendiente}
-  totalFuturos={totalFuturos}
-  deudaCuotas={deudaCuotas}
-  totalPagados={totalPagados}
-/>
+              totalPendiente={totalPendiente}
+              totalFuturos={totalFuturos}
+              deudaCuotas={deudaCuotas}
+              totalPagados={totalPagados}
+            />
             <div className="calc-card">{renderSeccion()}</div>
           </div>
         </Container>

@@ -11,6 +11,8 @@ const PanelMensual = ({
   marcarComoPagado,
   eliminarPagado,
   totalPendiente,
+    periodoActivo,
+  setPeriodoActivo,
 }) => {
   const [gastoEditando, setGastoEditando] = useState(null);
   const [busqueda, setBusqueda] = useState("");
@@ -26,11 +28,17 @@ const PanelMensual = ({
 
   const gastosPendientesFiltrados = filtrarGastos(gastosPendientes);
   const gastosPagadosFiltrados = filtrarGastos(gastosPagados);
-
+const nombrePeriodo = new Date(`${periodoActivo}-02`)
+  .toLocaleDateString("es-AR", {
+    month: "long",
+    year: "numeric",
+  });
   return (
     <>
       <div className="calc-display">
-        <p className="calc-title">Gastos mensuales</p>
+       <p className="calc-title">
+  {nombrePeriodo.charAt(0).toUpperCase() + nombrePeriodo.slice(1)}
+</p>
 
         <p className="calc-amount">
           ${totalPendiente.toLocaleString("es-AR")}
@@ -39,6 +47,14 @@ const PanelMensual = ({
         <div className="calc-sub">
           {gastosPendientes.length} gasto(s) pendientes
         </div>
+
+        <div className="mt-3">
+  <Form.Control
+    type="month"
+    value={periodoActivo}
+    onChange={(e) => setPeriodoActivo(e.target.value)}
+  />
+</div>
       </div>
 
       <div className="calc-body">
