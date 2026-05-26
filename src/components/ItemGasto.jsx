@@ -1,13 +1,8 @@
 import { Button, Badge } from "react-bootstrap";
 
-// Formatea fechas:
-// - "YYYY-MM-DD" -> "DD/MM"
-// - "DD/MM/YYYY" -> "DD/MM"
-// - fechas ISO de Mongo "2026-04-03T00:00:00.000Z" -> "DD/MM"
 const formatearDiaMes = (fecha) => {
   if (!fecha) return "";
 
-  // Si viene como string ISO, me quedo solo con la parte YYYY-MM-DD
   if (fecha.includes("T")) {
     fecha = fecha.split("T")[0];
   }
@@ -24,16 +19,21 @@ const formatearDiaMes = (fecha) => {
 
   return fecha;
 };
-const ItemGasto = ({ gasto, tipo, onAccion, onEditar }) => {
+
+const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo }) => {
   const esPagado = tipo === "pagado";
   const hoyISO = new Date().toISOString().slice(0, 10);
 
-  // Si vencimiento viene como ISO de Mongo, corto antes de comparar
   const vencimientoISO = gasto.vencimiento?.includes("T")
     ? gasto.vencimiento.split("T")[0]
     : gasto.vencimiento;
 
   const esVencido = !esPagado && vencimientoISO < hoyISO;
+
+  const periodoVencimiento = vencimientoISO?.slice(0, 7);
+
+  const esFueraDePeriodo =
+    !esPagado && periodoActivo && periodoVencimiento !== periodoActivo;
 
   return (
     <div className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -50,14 +50,28 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar }) => {
           </h3>
 
           {!esPagado && esVencido && <Badge bg="danger">Vencido</Badge>}
+
+          {esFueraDePeriodo && (
+            <Badge bg="warning" text="dark">
+              Fuera de período
+            </Badge>
+          )}
         </div>
 
         {!esPagado ? (
-          <small
-            className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}
-          >
-            Vence: {formatearDiaMes(gasto.vencimiento)}
-          </small>
+          <>
+            <small
+              className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}
+            >
+              Vence: {formatearDiaMes(gasto.vencimiento)}
+            </small>
+
+            {esFueraDePeriodo && (
+              <small className="d-block text-warning">
+                ⚠ Este gasto no corresponde al mes seleccionado.
+              </small>
+            )}
+          </>
         ) : (
           <small className="text-success">
             Gasto pagado el {formatearDiaMes(gasto.fechaPago)}

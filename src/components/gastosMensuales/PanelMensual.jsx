@@ -128,6 +128,7 @@ const PanelMensual = ({
             tipo="pendiente"
             onAccion={marcarComoPagado}
             onEditar={setGastoEditando}
+            periodoActivo={periodoActivo}
           />
         </div>
 
