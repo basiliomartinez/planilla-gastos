@@ -13,6 +13,7 @@ const PanelMensual = ({
   totalPendiente,
   periodoActivo,
   setPeriodoActivo,
+  moverMensualAFuturo,
 }) => {
   const [gastoEditando, setGastoEditando] = useState(null);
   const [busqueda, setBusqueda] = useState("");
@@ -128,6 +129,8 @@ const PanelMensual = ({
             tipo="pendiente"
             onAccion={marcarComoPagado}
             onEditar={setGastoEditando}
+            periodoActivo={periodoActivo}
+            onMoverAFuturo={moverMensualAFuturo}
           />
         </div>
 

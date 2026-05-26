@@ -1,7 +1,7 @@
 import { ListGroup, Alert } from "react-bootstrap";
 import ItemGasto from "./ItemGasto";
 
-const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion, onEditar }) => {
+const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion, onEditar, periodoActivo, onMoverAFuturo,}) => {
   const hoyISO = new Date().toISOString().slice(0, 10);
 
   const normalizarFecha = (fecha) => {
@@ -39,6 +39,8 @@ const ListaGastos = ({ titulo, arrayGastos, tipo, onAccion, onEditar }) => {
               tipo={tipo}
               onAccion={onAccion}
               onEditar={onEditar}
+              periodoActivo={periodoActivo}
+              onMoverAFuturo={onMoverAFuturo}
             />
           ))}
         </ListGroup>
