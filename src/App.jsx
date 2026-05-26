@@ -278,29 +278,56 @@ const App = () => {
     Swal.fire("Eliminado", "El gasto fue eliminado correctamente.", "success");
   };
 
-  const pasarFuturoAMensual = async (id) => {
-    const confirmar = await Swal.fire({
-      title: "¿Pasar a mensual?",
-      text: "Este gasto futuro se moverá a gastos mensuales.",
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, pasar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#0d6efd",
-      cancelButtonColor: "#6c757d",
-    });
+const pasarFuturoAMensual = async (id) => {
+  const confirmar = await Swal.fire({
+    title: "¿Pasar a mensual?",
+    text: "Este gasto futuro se moverá a gastos mensuales.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, pasar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#0d6efd",
+    cancelButtonColor: "#6c757d",
+  });
 
-    if (!confirmar.isConfirmed) return;
+  if (!confirmar.isConfirmed) return;
 
-    const resp = await pasarGastoFuturoAMensualApi(id);
+  const resp = await pasarGastoFuturoAMensualApi(id);
 
-    if (!resp.gasto) return;
+  if (!resp.gasto) return;
 
-    setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
-    setGastosPendientes([...gastosPendientes, resp.gasto]);
+  setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
+  setGastosPendientes([...gastosPendientes, resp.gasto]);
 
-    Swal.fire("Listo", "El gasto fue pasado a mensuales.", "success");
-  };
+  Swal.fire("Listo", "El gasto fue pasado a mensuales.", "success");
+};
+
+const moverMensualAFuturo = async (id) => {
+  const confirmar = await Swal.fire({
+    title: "¿Mover a futuros?",
+    text: "Este gasto saldrá de mensuales y pasará a gastos futuros.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, mover",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#0d6efd",
+    cancelButtonColor: "#6c757d",
+  });
+
+  if (!confirmar.isConfirmed) return;
+
+  const resp = await editarGastoApi(id, {
+    tipo: "futuro",
+    periodo: null,
+  });
+
+  if (!resp.gasto) return;
+
+  setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+  setGastosFuturos([resp.gasto, ...gastosFuturos]);
+
+  Swal.fire("Listo", "El gasto fue movido a futuros.", "success");
+};
 
   const agregarCuota = async (nuevaCuota) => {
     const resp = await crearCuotaApi(nuevaCuota);
@@ -367,6 +394,7 @@ const App = () => {
   totalPendiente={totalPendiente}
   periodoActivo={periodoActivo}
   setPeriodoActivo={setPeriodoActivo}
+  moverMensualAFuturo={moverMensualAFuturo}
 />
         );
 

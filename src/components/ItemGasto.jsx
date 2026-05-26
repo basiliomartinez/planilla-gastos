@@ -20,7 +20,7 @@ const formatearDiaMes = (fecha) => {
   return fecha;
 };
 
-const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo }) => {
+const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFuturo, }) => {
   const esPagado = tipo === "pagado";
   const hoyISO = new Date().toISOString().slice(0, 10);
 
@@ -66,11 +66,22 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo }) => {
               Vence: {formatearDiaMes(gasto.vencimiento)}
             </small>
 
-            {esFueraDePeriodo && (
-              <small className="d-block text-warning">
-                ⚠ Este gasto no corresponde al mes seleccionado.
-              </small>
-            )}
+         {esFueraDePeriodo && (
+  <>
+    <small className="d-block text-warning">
+      ⚠ Este gasto no corresponde al mes seleccionado.
+    </small>
+
+    <Button
+      variant="outline-warning"
+      size="sm"
+      className="mt-2"
+      onClick={() => onMoverAFuturo(gasto._id)}
+    >
+      Mover a futuros
+    </Button>
+  </>
+)}
           </>
         ) : (
           <small className="text-success">
