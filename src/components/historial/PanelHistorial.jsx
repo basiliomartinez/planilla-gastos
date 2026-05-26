@@ -1,37 +1,60 @@
-import { useState } from "react";
-import { Form, Alert, ListGroup } from "react-bootstrap";
+import { Alert, Badge, ListGroup } from "react-bootstrap";
 
 const PanelHistorial = ({ gastosPagados }) => {
-  const [mesSeleccionado, setMesSeleccionado] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+  const obtenerPeriodo = (gasto) => {
+    if (gasto.periodo) return gasto.periodo;
 
-  const gastosFiltrados = gastosPagados.filter((gasto) => {
-    if (!gasto.fechaPago) return false;
+    if (!gasto.fechaPago) return "Sin período";
 
     const fecha = gasto.fechaPago.includes("T")
       ? gasto.fechaPago.split("T")[0]
       : gasto.fechaPago;
 
-    return fecha.startsWith(mesSeleccionado);
-  });
+    return fecha.slice(0, 7);
+  };
 
-  const totalPagadoMes = gastosFiltrados.reduce(
-    (acc, gasto) => acc + gasto.monto,
-    0
-  );
+  const formatearPeriodo = (periodo) => {
+    if (periodo === "Sin período") return periodo;
+
+    const nombrePeriodo = new Date(`${periodo}-02`).toLocaleDateString(
+      "es-AR",
+      {
+        month: "long",
+        year: "numeric",
+      }
+    );
+
+    return nombrePeriodo.charAt(0).toUpperCase() + nombrePeriodo.slice(1);
+  };
 
   const formatearFecha = (fecha) => {
     if (!fecha) return "";
 
-    const fechaLimpia = fecha.includes("T")
-      ? fecha.split("T")[0]
-      : fecha;
+    const fechaLimpia = fecha.includes("T") ? fecha.split("T")[0] : fecha;
 
     const [anio, mes, dia] = fechaLimpia.split("-");
 
     return `${dia}/${mes}/${anio}`;
   };
+
+  const gastosPorPeriodo = gastosPagados.reduce((acc, gasto) => {
+    const periodo = obtenerPeriodo(gasto);
+
+    if (!acc[periodo]) {
+      acc[periodo] = [];
+    }
+
+    acc[periodo].push(gasto);
+
+    return acc;
+  }, {});
+
+  const periodosOrdenados = Object.keys(gastosPorPeriodo).sort().reverse();
+
+  const totalGeneralPagado = gastosPagados.reduce(
+    (acc, gasto) => acc + gasto.monto,
+    0
+  );
 
   return (
     <>
@@ -39,57 +62,70 @@ const PanelHistorial = ({ gastosPagados }) => {
         <p className="calc-title">Historial mensual</p>
 
         <p className="calc-amount text-success">
-          ${totalPagadoMes.toLocaleString("es-AR")}
+          ${totalGeneralPagado.toLocaleString("es-AR")}
         </p>
 
         <div className="calc-sub">
-          {gastosFiltrados.length} gasto(s) pagados
+          {gastosPagados.length} gasto(s) pagados en total
         </div>
       </div>
 
       <div className="calc-body">
-        <section>
-          <h2 className="section-title">Filtrar por mes</h2>
+        <h2 className="section-title">Resumen por mes</h2>
 
-          <Form.Control
-            type="month"
-            value={mesSeleccionado}
-            onChange={(e) => setMesSeleccionado(e.target.value)}
-          />
-        </section>
+        {periodosOrdenados.length === 0 ? (
+          <Alert variant="info">Todavía no hay gastos pagados.</Alert>
+        ) : (
+          periodosOrdenados.map((periodo) => {
+            const gastosDelPeriodo = gastosPorPeriodo[periodo];
 
-        <div className="paid-block">
-          <h2 className="section-title">Gastos pagados</h2>
+            const totalPeriodo = gastosDelPeriodo.reduce(
+              (acc, gasto) => acc + gasto.monto,
+              0
+            );
 
-          {gastosFiltrados.length === 0 ? (
-            <Alert variant="info">
-              No hay gastos pagados en este mes.
-            </Alert>
-          ) : (
-            <ListGroup>
-              {gastosFiltrados.map((gasto) => (
-                <div
-                  key={gasto._id}
-                  className="list-group-item d-flex justify-content-between align-items-center"
-                >
+            return (
+              <section key={periodo} className="historial-periodo">
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
                   <div>
-                    <h3 className="h6 mb-1 text-light">
-                      {gasto.nombre}
+                    <h3 className="h5 text-light mb-1">
+                      {formatearPeriodo(periodo)}
                     </h3>
 
-                    <small className="text-success">
-                      Pagado el {formatearFecha(gasto.fechaPago)}
+                    <small className="text-secondary">
+                      {gastosDelPeriodo.length} gasto(s) pagados
                     </small>
                   </div>
 
-                  <strong className="text-success">
-                    ${gasto.monto.toLocaleString("es-AR")}
-                  </strong>
+                  <Badge bg="success" className="fs-6">
+                    ${totalPeriodo.toLocaleString("es-AR")}
+                  </Badge>
                 </div>
-              ))}
-            </ListGroup>
-          )}
-        </div>
+
+                <ListGroup>
+                  {gastosDelPeriodo.map((gasto) => (
+                    <div
+                      key={gasto._id}
+                      className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2"
+                    >
+                      <div>
+                        <h4 className="h6 mb-1 text-light">{gasto.nombre}</h4>
+
+                        <small className="text-success">
+                          Pagado el {formatearFecha(gasto.fechaPago)}
+                        </small>
+                      </div>
+
+                      <strong className="text-success">
+                        ${gasto.monto.toLocaleString("es-AR")}
+                      </strong>
+                    </div>
+                  ))}
+                </ListGroup>
+              </section>
+            );
+          })
+        )}
       </div>
     </>
   );
