@@ -21,8 +21,11 @@ const PanelCuotas = ({
   const [cantidadCuotas, setCantidadCuotas] = useState("");
   const [cuotaEditando, setCuotaEditando] = useState(null);
   const [error, setError] = useState("");
-
+const [busqueda, setBusqueda] = useState("");
   const totalDeuda = cuotas.reduce((acc, c) => acc + (c.deudaPendiente || 0), 0);
+const cuotasFiltradas = cuotas.filter((c) =>
+  c.articulo.toLowerCase().includes(busqueda.toLowerCase())
+);
 
   useEffect(() => {
     if (cuotaEditando) {
@@ -167,6 +170,18 @@ const PanelCuotas = ({
           </Form>
         </section>
 
+<section className="mb-4">
+  <h2 className="section-title">Buscar cuota</h2>
+
+  <Form.Control
+    type="text"
+    className="buscador-gastos"
+    placeholder="🔎 Buscar por artículo..."
+    value={busqueda}
+    onChange={(e) => setBusqueda(e.target.value)}
+  />
+</section>
+
         <div className="paid-block">
           <h2 className="section-title">Listado de cuotas</h2>
 
@@ -174,7 +189,7 @@ const PanelCuotas = ({
             <Alert variant="info">No hay cuotas cargadas.</Alert>
           ) : (
             <ListGroup>
-              {cuotas.map((c) => (
+              {cuotasFiltradas.map((c) => (
                 <div
                   key={c._id}
                   className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2"

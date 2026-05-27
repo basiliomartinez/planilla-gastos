@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
+import Swal from "sweetalert2";
 
 import Login from "./components/auth/Login";
 
@@ -9,6 +10,9 @@ import FooterPrincipal from "./components/layout/FooterPrincipal";
 import PanelMensual from "./components/gastosMensuales/PanelMensual";
 import PanelFuturos from "./components/gastosFuturos/PanelFuturos";
 import PanelCuotas from "./components/gastosCuotas/PanelCuotas";
+import ResumenCards from "./components/dashboard/ResumenCards";
+import PanelHistorial from "./components/historial/PanelHistorial";
+import PanelVencimientos from "./components/vencimientos/PanelVencimientos";
 
 import {
   listarGastosApi,
@@ -28,9 +32,11 @@ import "./styles/gastos.css";
 
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
-
+  const [periodoActivo, setPeriodoActivo] = useState(
+    new Date().toISOString().slice(0, 7),
+  );
   const [usuarioLogueado, setUsuarioLogueado] = useState(
-    JSON.parse(sessionStorage.getItem("usuarioKey")) || {}
+    JSON.parse(sessionStorage.getItem("usuarioKey")) || {},
   );
 
   const [mensajeSesion, setMensajeSesion] = useState("");
@@ -39,6 +45,7 @@ const App = () => {
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
+  const [todosLosGastosMensuales, setTodosLosGastosMensuales] = useState([]);
   const [cuotas, setCuotas] = useState([]);
 
   useEffect(() => {
@@ -48,7 +55,10 @@ const App = () => {
       setCargando(true);
 
       try {
-        const mensuales = await listarGastosApi("mensual");
+        const mensuales = await listarGastosApi(
+          "mensual", periodoActivo,
+        );
+        const todosMensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
         const cuotasData = await listarCuotasApi();
 
@@ -57,6 +67,7 @@ const App = () => {
 
         setGastosPendientes(pendientes);
         setGastosPagados(pagados);
+        setTodosLosGastosMensuales(todosMensuales);
         setGastosFuturos(futuros);
         setCuotas(cuotasData);
       } catch (error) {
@@ -67,7 +78,7 @@ const App = () => {
     };
 
     cargarDatos();
-  }, [usuarioLogueado]);
+  }, [usuarioLogueado, periodoActivo]);
 
   useEffect(() => {
     const manejarSesionExpirada = () => {
@@ -96,6 +107,8 @@ const App = () => {
     setGastosFuturos([]);
     setCuotas([]);
     setCargando(false);
+    setPeriodoActivo(new Date().toISOString().slice(0, 7));
+    setTodosLosGastosMensuales([]);
   };
 
   if (!usuarioLogueado?.token) {
@@ -124,16 +137,30 @@ const App = () => {
 
   const totalPendiente = gastosPendientes.reduce(
     (acc, gasto) => acc + gasto.monto,
-    0
+    0,
+  );
+  const totalFuturos = gastosFuturos.reduce(
+    (acc, gasto) => acc + gasto.monto,
+    0,
+  );
+
+  const totalPagados = gastosPagados.reduce(
+    (acc, gasto) => acc + gasto.monto,
+    0,
+  );
+
+  const deudaCuotas = cuotas.reduce(
+    (acc, cuota) => acc + cuota.deudaPendiente,
+    0,
   );
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     const existePagado = gastosPagados.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     if (existePendiente || existePagado) {
@@ -147,6 +174,7 @@ const App = () => {
       const resp = await crearGastoApi({
         ...nuevoGasto,
         tipo: "mensual",
+         periodo: periodoActivo,
       });
 
       if (resp.gasto) {
@@ -169,23 +197,19 @@ const App = () => {
     }
 
     setGastosPendientes(
-      gastosPendientes.map((g) => (g._id === id ? resp.gasto : g))
+      gastosPendientes.map((g) => (g._id === id ? resp.gasto : g)),
     );
 
-    setGastosFuturos(
-      gastosFuturos.map((g) => (g._id === id ? resp.gasto : g))
-    );
+    setGastosFuturos(gastosFuturos.map((g) => (g._id === id ? resp.gasto : g)));
 
-    setGastosPagados(
-      gastosPagados.map((g) => (g._id === id ? resp.gasto : g))
-    );
+    setGastosPagados(gastosPagados.map((g) => (g._id === id ? resp.gasto : g)));
 
     return { ok: true };
   };
 
   const agregarGastoFuturo = async (nuevoGasto) => {
     const existe = gastosFuturos.some(
-      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase()
+      (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
     );
 
     if (existe) {
@@ -214,8 +238,18 @@ const App = () => {
     const gasto = gastosPendientes.find((g) => g._id === id);
     if (!gasto) return;
 
-    const confirmar = window.confirm(`¿Pagaste "${gasto.nombre}"?`);
-    if (!confirmar) return;
+    const confirmar = await Swal.fire({
+      title: "¿Confirmás el pago?",
+      text: `Vas a marcar "${gasto.nombre}" como pagado.`,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, pagar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#198754",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
 
     const resp = await pagarGastoApi(id);
 
@@ -223,27 +257,80 @@ const App = () => {
 
     setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
     setGastosPagados([resp.gasto, ...gastosPagados]);
+
+    Swal.fire("Listo", "El gasto fue marcado como pagado.", "success");
   };
 
   const eliminarPagado = async (id) => {
-    const confirmar = window.confirm("¿Eliminar gasto?");
-    if (!confirmar) return;
+    const confirmar = await Swal.fire({
+      title: "¿Eliminar gasto?",
+      text: "Se eliminará del historial de pagados.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
 
     await eliminarGastoApi(id);
     setGastosPagados(gastosPagados.filter((g) => g._id !== id));
+
+    Swal.fire("Eliminado", "El gasto fue eliminado correctamente.", "success");
   };
 
-  const pasarFuturoAMensual = async (id) => {
-    const confirmar = window.confirm("¿Pasar a mensual?");
-    if (!confirmar) return;
+const pasarFuturoAMensual = async (id) => {
+  const confirmar = await Swal.fire({
+    title: "¿Pasar a mensual?",
+    text: "Este gasto futuro se moverá a gastos mensuales.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, pasar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#0d6efd",
+    cancelButtonColor: "#6c757d",
+  });
 
-    const resp = await pasarGastoFuturoAMensualApi(id);
+  if (!confirmar.isConfirmed) return;
 
-    if (!resp.gasto) return;
+  const resp = await pasarGastoFuturoAMensualApi(id);
 
-    setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
-    setGastosPendientes([...gastosPendientes, resp.gasto]);
-  };
+  if (!resp.gasto) return;
+
+  setGastosFuturos(gastosFuturos.filter((g) => g._id !== id));
+  setGastosPendientes([...gastosPendientes, resp.gasto]);
+
+  Swal.fire("Listo", "El gasto fue pasado a mensuales.", "success");
+};
+
+const moverMensualAFuturo = async (id) => {
+  const confirmar = await Swal.fire({
+    title: "¿Mover a futuros?",
+    text: "Este gasto saldrá de mensuales y pasará a gastos futuros.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, mover",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#0d6efd",
+    cancelButtonColor: "#6c757d",
+  });
+
+  if (!confirmar.isConfirmed) return;
+
+  const resp = await editarGastoApi(id, {
+    tipo: "futuro",
+    periodo: null,
+  });
+
+  if (!resp.gasto) return;
+
+  setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+  setGastosFuturos([resp.gasto, ...gastosFuturos]);
+
+  Swal.fire("Listo", "El gasto fue movido a futuros.", "success");
+};
 
   const agregarCuota = async (nuevaCuota) => {
     const resp = await crearCuotaApi(nuevaCuota);
@@ -256,17 +343,17 @@ const App = () => {
     return { ok: false, msg: "No se pudo crear cuota" };
   };
 
-const editarCuota = async (id, cuotaEditada) => {
-  const resp = await editarCuotaApi(id, cuotaEditada);
+  const editarCuota = async (id, cuotaEditada) => {
+    const resp = await editarCuotaApi(id, cuotaEditada);
 
-  if (!resp.cuota) {
-    return { ok: false, msg: "No se pudo editar la cuota" };
-  }
+    if (!resp.cuota) {
+      return { ok: false, msg: "No se pudo editar la cuota" };
+    }
 
-  setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
+    setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
 
-  return { ok: true };
-};
+    return { ok: true };
+  };
 
   const pagarCuota = async (id) => {
     const resp = await pagarCuotaApi(id);
@@ -277,45 +364,72 @@ const editarCuota = async (id, cuotaEditada) => {
   };
 
   const eliminarCuota = async (id) => {
+    const confirmar = await Swal.fire({
+      title: "¿Eliminar cuota?",
+      text: "Se eliminará esta compra en cuotas.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#dc3545",
+      cancelButtonColor: "#6c757d",
+    });
+
+    if (!confirmar.isConfirmed) return;
+
     await eliminarCuotaApi(id);
     setCuotas(cuotas.filter((c) => c._id !== id));
+
+    Swal.fire("Eliminada", "La cuota fue eliminada correctamente.", "success");
   };
 
   const renderSeccion = () => {
     switch (seccionActiva) {
       case "mensuales":
         return (
-          <PanelMensual
-            gastosPendientes={gastosPendientes}
-            gastosPagados={gastosPagados}
-            agregarGasto={agregarGasto}
-            editarGasto={editarGasto}
-            marcarComoPagado={marcarComoPagado}
-            eliminarPagado={eliminarPagado}
-            totalPendiente={totalPendiente}
-          />
+        <PanelMensual
+  gastosPendientes={gastosPendientes}
+  gastosPagados={gastosPagados}
+  agregarGasto={agregarGasto}
+  editarGasto={editarGasto}
+  marcarComoPagado={marcarComoPagado}
+  eliminarPagado={eliminarPagado}
+  totalPendiente={totalPendiente}
+  periodoActivo={periodoActivo}
+  setPeriodoActivo={setPeriodoActivo}
+  moverMensualAFuturo={moverMensualAFuturo}
+/>
         );
 
       case "futuros":
         return (
-      <PanelFuturos
-  gastosFuturos={gastosFuturos}
-  agregarGastoFuturo={agregarGastoFuturo}
-  editarGasto={editarGasto}
-  pasarFuturoAMensual={pasarFuturoAMensual}
-/>
+          <PanelFuturos
+            gastosFuturos={gastosFuturos}
+            agregarGastoFuturo={agregarGastoFuturo}
+            editarGasto={editarGasto}
+            pasarFuturoAMensual={pasarFuturoAMensual}
+          />
         );
 
       case "cuotas":
         return (
-        <PanelCuotas
-  cuotas={cuotas}
-  agregarCuota={agregarCuota}
-  editarCuota={editarCuota}
-  pagarCuota={pagarCuota}
-  eliminarCuota={eliminarCuota}
-/>
+          <PanelCuotas
+            cuotas={cuotas}
+            agregarCuota={agregarCuota}
+            editarCuota={editarCuota}
+            pagarCuota={pagarCuota}
+            eliminarCuota={eliminarCuota}
+          />
         );
+      case "historial":
+        return <PanelHistorial gastosPagados={gastosPagados} />;
+case "vencimientos":
+  return (
+    <PanelVencimientos
+      gastos={[...gastosPendientes, ...gastosPagados]}
+      marcarComoPagado={marcarComoPagado}
+    />
+  );
 
       default:
         return null;
@@ -334,6 +448,12 @@ const editarCuota = async (id, cuotaEditada) => {
       <main className="main-content">
         <Container className="py-2 py-md-4">
           <div className="calc-shell">
+            <ResumenCards
+              totalPendiente={totalPendiente}
+              totalFuturos={totalFuturos}
+              deudaCuotas={deudaCuotas}
+              totalPagados={totalPagados}
+            />
             <div className="calc-card">{renderSeccion()}</div>
           </div>
         </Container>
