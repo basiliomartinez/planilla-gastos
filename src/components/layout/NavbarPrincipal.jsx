@@ -46,6 +46,12 @@ const NavbarPrincipal = ({
             >
               Historial
             </Nav.Link>
+            <Nav.Link
+  active={seccionActiva === "vencimientos"}
+  onClick={() => setSeccionActiva("vencimientos")}
+>
+  Vencimientos
+</Nav.Link>
             <span className="navbar-user ms-md-3 my-2 my-md-0">
               {usuarioLogueado?.nombre}
             </span>

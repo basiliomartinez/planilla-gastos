@@ -12,6 +12,7 @@ import PanelFuturos from "./components/gastosFuturos/PanelFuturos";
 import PanelCuotas from "./components/gastosCuotas/PanelCuotas";
 import ResumenCards from "./components/dashboard/ResumenCards";
 import PanelHistorial from "./components/historial/PanelHistorial";
+import PanelVencimientos from "./components/vencimientos/PanelVencimientos";
 
 import {
   listarGastosApi,
@@ -44,6 +45,7 @@ const App = () => {
   const [gastosPendientes, setGastosPendientes] = useState([]);
   const [gastosPagados, setGastosPagados] = useState([]);
   const [gastosFuturos, setGastosFuturos] = useState([]);
+  const [todosLosGastosMensuales, setTodosLosGastosMensuales] = useState([]);
   const [cuotas, setCuotas] = useState([]);
 
   useEffect(() => {
@@ -54,10 +56,9 @@ const App = () => {
 
       try {
         const mensuales = await listarGastosApi(
-          "mensual",
-
-          periodoActivo,
+          "mensual", periodoActivo,
         );
+        const todosMensuales = await listarGastosApi("mensual");
         const futuros = await listarGastosApi("futuro");
         const cuotasData = await listarCuotasApi();
 
@@ -66,6 +67,7 @@ const App = () => {
 
         setGastosPendientes(pendientes);
         setGastosPagados(pagados);
+        setTodosLosGastosMensuales(todosMensuales);
         setGastosFuturos(futuros);
         setCuotas(cuotasData);
       } catch (error) {
@@ -106,6 +108,7 @@ const App = () => {
     setCuotas([]);
     setCargando(false);
     setPeriodoActivo(new Date().toISOString().slice(0, 7));
+    setTodosLosGastosMensuales([]);
   };
 
   if (!usuarioLogueado?.token) {
@@ -420,6 +423,13 @@ const moverMensualAFuturo = async (id) => {
         );
       case "historial":
         return <PanelHistorial gastosPagados={gastosPagados} />;
+case "vencimientos":
+  return (
+    <PanelVencimientos
+      gastos={[...gastosPendientes, ...gastosPagados]}
+      marcarComoPagado={marcarComoPagado}
+    />
+  );
 
       default:
         return null;
