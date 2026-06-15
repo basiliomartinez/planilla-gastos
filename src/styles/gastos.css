@@ -444,3 +444,34 @@
 .historial-periodo:last-child {
   border-bottom: none;
 }
+
+.resumen-card-clickable {
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.resumen-card-clickable:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+}
+
+@media (max-width: 576px) {
+  .resumen-cards-row {
+    margin-bottom: 12px !important;
+  }
+
+  .resumen-card {
+    min-height: 78px;
+    padding: 10px 12px;
+    border-radius: 14px;
+  }
+
+  .resumen-card small {
+    font-size: 0.75rem;
+  }
+
+  .resumen-card h3 {
+    font-size: 1rem;
+    margin-top: 4px;
+  }
+}
