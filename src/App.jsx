@@ -234,32 +234,40 @@ const App = () => {
     }
   };
 
-  const marcarComoPagado = async (id) => {
-    const gasto = gastosPendientes.find((g) => g._id === id);
-    if (!gasto) return;
+ const marcarComoPagado = async (id) => {
+  const gasto = gastosPendientes.find((g) => g._id === id);
+  if (!gasto) return;
 
-    const confirmar = await Swal.fire({
-      title: "¿Confirmás el pago?",
-      text: `Vas a marcar "${gasto.nombre}" como pagado.`,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, pagar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#198754",
-      cancelButtonColor: "#6c757d",
-    });
+  const confirmar = await Swal.fire({
+    title: "¿Confirmás el pago?",
+    text: `Vas a marcar "${gasto.nombre}" como pagado.`,
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonText: "Sí, pagar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#198754",
+    cancelButtonColor: "#6c757d",
+  });
 
-    if (!confirmar.isConfirmed) return;
+  if (!confirmar.isConfirmed) return;
 
-    const resp = await pagarGastoApi(id);
+  const resp = await pagarGastoApi(id);
 
-    if (!resp.gasto) return;
+  if (!resp.gasto) return;
 
-    setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
-    setGastosPagados([resp.gasto, ...gastosPagados]);
+  setGastosPendientes(gastosPendientes.filter((g) => g._id !== id));
+  setGastosPagados([resp.gasto, ...gastosPagados]);
 
-    Swal.fire("Listo", "El gasto fue marcado como pagado.", "success");
-  };
+  Swal.fire({
+    title: "🎉 ¡Un gasto menos!",
+    text: `"${gasto.nombre}" ya quedó pagado. Buen avance.`,
+    icon: "success",
+    confirmButtonText: "Genial",
+    confirmButtonColor: "#198754",
+    timer: 2500,
+    timerProgressBar: true,
+  });
+};
 
   const eliminarPagado = async (id) => {
     const confirmar = await Swal.fire({
@@ -355,13 +363,41 @@ const moverMensualAFuturo = async (id) => {
     return { ok: true };
   };
 
-  const pagarCuota = async (id) => {
-    const resp = await pagarCuotaApi(id);
+const pagarCuota = async (id) => {
+  const cuotaActual = cuotas.find((c) => c._id === id);
 
-    if (!resp.cuota) return;
+  const resp = await pagarCuotaApi(id);
 
-    setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
-  };
+  if (!resp.cuota) return;
+
+  setCuotas(cuotas.map((c) => (c._id === id ? resp.cuota : c)));
+
+  if (resp.cuota.estado === "finalizada") {
+    Swal.fire({
+      title: "🏆 ¡Compra terminada!",
+      text: `Terminaste de pagar "${resp.cuota.articulo}". Gran esfuerzo.`,
+      icon: "success",
+      confirmButtonText: "Excelente",
+      confirmButtonColor: "#198754",
+      timer: 3500,
+      timerProgressBar: true,
+    });
+
+    return;
+  }
+
+  Swal.fire({
+    title: "💪 Cuota pagada",
+    text: cuotaActual
+      ? `Pagaste una cuota de "${cuotaActual.articulo}". Ya falta menos.`
+      : "Cuota registrada correctamente. Ya falta menos.",
+    icon: "success",
+    confirmButtonText: "Bien",
+    confirmButtonColor: "#0d6efd",
+    timer: 2500,
+    timerProgressBar: true,
+  });
+};
 
   const eliminarCuota = async (id) => {
     const confirmar = await Swal.fire({
