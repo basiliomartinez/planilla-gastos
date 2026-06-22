@@ -490,6 +490,7 @@ case "vencimientos":
               deudaCuotas={deudaCuotas}
               totalPagados={totalPagados}
                setSeccionActiva={setSeccionActiva}
+               periodoActivo={periodoActivo}
             />
             <div className="calc-card">{renderSeccion()}</div>
           </div>
