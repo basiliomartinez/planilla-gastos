@@ -475,3 +475,16 @@
     margin-top: 4px;
   }
 }
+
+.resumen-card-periodo {
+  font-size: 0.72rem;
+  opacity: 0.75;
+  margin-top: 2px;
+  line-height: 1.1;
+}
+
+@media (max-width: 576px) {
+  .resumen-card-periodo {
+    font-size: 0.65rem;
+  }
+}

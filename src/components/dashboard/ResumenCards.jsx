@@ -6,7 +6,19 @@ const ResumenCards = ({
   deudaCuotas,
   totalPagados,
   setSeccionActiva,
+  periodoActivo,
 }) => {
+  const nombrePeriodo = new Date(`${periodoActivo}-02`).toLocaleDateString(
+    "es-AR",
+    {
+      month: "long",
+      year: "numeric",
+    }
+  );
+
+  const periodoFormateado =
+    nombrePeriodo.charAt(0).toUpperCase() + nombrePeriodo.slice(1);
+
   return (
     <Row className="g-3 mb-4 resumen-cards-row">
       <Col xs={6} md={3}>
@@ -16,6 +28,7 @@ const ResumenCards = ({
           role="button"
         >
           <small>Pendiente</small>
+          <span className="resumen-card-periodo">{periodoFormateado}</span>
           <h3>${totalPendiente.toLocaleString("es-AR")}</h3>
         </div>
       </Col>
@@ -49,6 +62,7 @@ const ResumenCards = ({
           role="button"
         >
           <small>Pagados</small>
+          <span className="resumen-card-periodo">{periodoFormateado}</span>
           <h3>${totalPagados.toLocaleString("es-AR")}</h3>
         </div>
       </Col>
