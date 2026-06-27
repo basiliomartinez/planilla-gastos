@@ -488,3 +488,50 @@
     font-size: 0.65rem;
   }
 }
+
+.formulario-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.btn-exportar-pdf-desktop {
+  display: inline-flex;
+  white-space: nowrap;
+}
+
+.exportar-pdf-mobile {
+  display: none;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+@media (max-width: 576px) {
+  .formulario-header {
+    display: block;
+  }
+
+  .formulario-header .btn-exportar-pdf-desktop {
+    display: none !important;
+  }
+
+  .exportar-pdf-mobile {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.12);
+  }
+
+.exportar-pdf-mobile .btn {
+    width: auto;
+    min-width: 150px;
+
+    padding: 2px 11px;  
+    font-size: 0.85rem;  
+    line-height: 1.2;
+}
+}

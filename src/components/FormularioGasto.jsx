@@ -13,6 +13,7 @@ const FormularioGasto = ({
   editarGasto,
   gastoEditando,
   cancelarEdicion,
+  ocultarTitulo = false,
 }) => {
   const [nombre, setNombre] = useState("");
   const [monto, setMonto] = useState("");
@@ -85,9 +86,11 @@ const FormularioGasto = ({
 
   return (
     <section>
-      <h2 className="h4 mb-3">
-        {gastoEditando ? "Editar gasto" : "Agregar gasto"}
-      </h2>
+    {!ocultarTitulo && (
+  <h2 className="h4 mb-3">
+    {gastoEditando ? "Editar gasto" : "Agregar gasto"}
+  </h2>
+)}
 
       {error && <Alert variant="warning">{error}</Alert>}
 
