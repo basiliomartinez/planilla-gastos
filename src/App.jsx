@@ -431,6 +431,7 @@ const App = () => {
             periodoActivo={periodoActivo}
             setPeriodoActivo={setPeriodoActivo}
             moverMensualAFuturo={moverMensualAFuturo}
+            usuario={usuarioLogueado}
           />
         );
       case "futuros":
