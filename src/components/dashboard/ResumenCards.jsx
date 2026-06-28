@@ -7,6 +7,8 @@ const ResumenCards = ({
   totalPagados,
   setSeccionActiva,
   periodoActivo,
+  cantidadVencidos,
+  cantidadVencenHoy,
 }) => {
   const nombrePeriodo = new Date(`${periodoActivo}-02`).toLocaleDateString(
     "es-AR",
@@ -30,6 +32,21 @@ const ResumenCards = ({
           <small>Pendiente</small>
           <span className="resumen-card-periodo">{periodoFormateado}</span>
           <h3>${totalPendiente.toLocaleString("es-AR")}</h3>
+
+          {(cantidadVencidos > 0 || cantidadVencenHoy > 0) && (
+            <div className="resumen-alertas">
+              {cantidadVencidos > 0 && (
+                <span className="resumen-alerta resumen-alerta-danger">
+                  ⚠️ {cantidadVencidos} vencido(s)
+                </span>
+              )}
+
+              {cantidadVencenHoy > 0 && (
+                <span className="resumen-alerta resumen-alerta-warning">
+🟡 {cantidadVencenHoy} hoy           </span>
+              )}
+            </div>
+          )}
         </div>
       </Col>
 

@@ -193,6 +193,25 @@ Swal.fire({
     (acc, cuota) => acc + cuota.deudaPendiente,
     0,
   );
+
+  const hoyISO = new Date().toISOString().slice(0, 10);
+
+const gastosVencidos = gastosPendientes.filter((gasto) => {
+  const vencimiento = gasto.vencimiento?.includes("T")
+    ? gasto.vencimiento.split("T")[0]
+    : gasto.vencimiento;
+
+  return vencimiento < hoyISO;
+});
+
+const gastosVencenHoy = gastosPendientes.filter((gasto) => {
+  const vencimiento = gasto.vencimiento?.includes("T")
+    ? gasto.vencimiento.split("T")[0]
+    : gasto.vencimiento;
+
+  return vencimiento === hoyISO;
+});
+
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
       (g) => g.nombre.toLowerCase() === nuevoGasto.nombre.toLowerCase(),
@@ -467,6 +486,8 @@ Swal.fire({
               totalPagados={totalPagados}
               setSeccionActiva={setSeccionActiva}
               periodoActivo={periodoActivo}
+              cantidadVencidos={gastosVencidos.length}
+  cantidadVencenHoy={gastosVencenHoy.length}
             />
             <div className="calc-card">{renderSeccion()}</div>
           </div>
