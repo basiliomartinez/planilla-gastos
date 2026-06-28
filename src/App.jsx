@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import Swal from "sweetalert2";
@@ -25,6 +24,8 @@ import {
   editarCuotaApi,
 } from "./helpers/queries";
 import "./styles/gastos.css";
+import PanelDashboard from "./components/dashboard/PanelDashboard";
+
 const App = () => {
   const [seccionActiva, setSeccionActiva] = useState("mensuales");
   const [periodoActivo, setPeriodoActivo] = useState(
@@ -90,9 +91,9 @@ const App = () => {
       0,
     );
     setAlertaVencidosMostrada(true);
-Swal.fire({
-  title: "⚠️ Atención con tus vencimientos",
-  html: `
+    Swal.fire({
+      title: "⚠️ Atención con tus vencimientos",
+      html: `
     <div style="text-align:left">
       ${
         gastosVencidos.length > 0
@@ -110,22 +111,18 @@ Swal.fire({
       }
     </div>
   `,
-  icon: "warning",
-  showCancelButton: true,
-  confirmButtonText: "Revisar vencimientos",
-  cancelButtonText: "Cerrar",
-  confirmButtonColor: "#f59e0b",
-  cancelButtonColor: "#6c757d",
-}).then((resultado) => {
-  if (resultado.isConfirmed) {
-    setSeccionActiva("vencimientos");
-  }
-});  }, [
-    cargando,
-    alertaVencidosMostrada,
-    usuarioLogueado,
-    gastosPendientes,
-  ]);
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Revisar vencimientos",
+      cancelButtonText: "Cerrar",
+      confirmButtonColor: "#f59e0b",
+      cancelButtonColor: "#6c757d",
+    }).then((resultado) => {
+      if (resultado.isConfirmed) {
+        setSeccionActiva("vencimientos");
+      }
+    });
+  }, [cargando, alertaVencidosMostrada, usuarioLogueado, gastosPendientes]);
   useEffect(() => {
     const manejarSesionExpirada = () => {
       setUsuarioLogueado({});
@@ -196,21 +193,21 @@ Swal.fire({
 
   const hoyISO = new Date().toISOString().slice(0, 10);
 
-const gastosVencidos = gastosPendientes.filter((gasto) => {
-  const vencimiento = gasto.vencimiento?.includes("T")
-    ? gasto.vencimiento.split("T")[0]
-    : gasto.vencimiento;
+  const gastosVencidos = gastosPendientes.filter((gasto) => {
+    const vencimiento = gasto.vencimiento?.includes("T")
+      ? gasto.vencimiento.split("T")[0]
+      : gasto.vencimiento;
 
-  return vencimiento < hoyISO;
-});
+    return vencimiento < hoyISO;
+  });
 
-const gastosVencenHoy = gastosPendientes.filter((gasto) => {
-  const vencimiento = gasto.vencimiento?.includes("T")
-    ? gasto.vencimiento.split("T")[0]
-    : gasto.vencimiento;
+  const gastosVencenHoy = gastosPendientes.filter((gasto) => {
+    const vencimiento = gasto.vencimiento?.includes("T")
+      ? gasto.vencimiento.split("T")[0]
+      : gasto.vencimiento;
 
-  return vencimiento === hoyISO;
-});
+    return vencimiento === hoyISO;
+  });
 
   const agregarGasto = async (nuevoGasto) => {
     const existePendiente = gastosPendientes.some(
@@ -464,6 +461,20 @@ const gastosVencenHoy = gastosPendientes.filter((gasto) => {
             marcarComoPagado={marcarComoPagado}
           />
         );
+      case "dashboard":
+        return (
+          <PanelDashboard
+            totalPendiente={totalPendiente}
+            totalPagados={totalPagados}
+            totalFuturos={totalFuturos}
+            deudaCuotas={deudaCuotas}
+            periodoActivo={periodoActivo}
+            setPeriodoActivo={setPeriodoActivo}
+            setSeccionActiva={setSeccionActiva}
+            usuario={usuarioLogueado}
+          />
+        );
+
       default:
         return null;
     }
@@ -487,7 +498,7 @@ const gastosVencenHoy = gastosPendientes.filter((gasto) => {
               setSeccionActiva={setSeccionActiva}
               periodoActivo={periodoActivo}
               cantidadVencidos={gastosVencidos.length}
-  cantidadVencenHoy={gastosVencenHoy.length}
+              cantidadVencenHoy={gastosVencenHoy.length}
             />
             <div className="calc-card">{renderSeccion()}</div>
           </div>
