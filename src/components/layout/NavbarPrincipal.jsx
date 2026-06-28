@@ -31,7 +31,7 @@ const NavbarPrincipal = ({
       <Container>
         <Navbar.Brand
           style={{ fontSize: "16px", cursor: "pointer" }}
-          onClick={() => navegarA("mensuales")}
+          onClick={() => navegarA("dashboard")}
         >
           💰 Cuentas Claras
         </Navbar.Brand>
@@ -40,6 +40,14 @@ const NavbarPrincipal = ({
 
         <Navbar.Collapse id="navbar-cuentas-claras">
           <Nav className="ms-auto text-center align-items-md-center">
+
+            <Nav.Link
+              active={seccionActiva === "dashboard"}
+              onClick={() => navegarA("dashboard")}
+            >
+              Dashboard
+            </Nav.Link>
+
             <Nav.Link
               active={seccionActiva === "mensuales"}
               onClick={() => navegarA("mensuales")}
