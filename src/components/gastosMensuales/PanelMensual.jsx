@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Form } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import FormularioGasto from "../FormularioGasto";
 import ListaGastos from "../ListaGastos";
 
@@ -14,6 +16,7 @@ const PanelMensual = ({
   periodoActivo,
   setPeriodoActivo,
   moverMensualAFuturo,
+  usuario,
 }) => {
   const [gastoEditando, setGastoEditando] = useState(null);
   const [busqueda, setBusqueda] = useState("");
@@ -24,7 +27,7 @@ const PanelMensual = ({
 
   const filtrarGastos = (arrayGastos) =>
     arrayGastos.filter((gasto) =>
-      gasto.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      gasto.nombre.toLowerCase().includes(busqueda.toLowerCase()),
     );
 
   const gastosPendientesFiltrados = filtrarGastos(gastosPendientes);
@@ -35,8 +38,67 @@ const PanelMensual = ({
     {
       month: "long",
       year: "numeric",
-    }
+    },
   );
+
+  const exportarPDF = () => {
+    const doc = new jsPDF();
+
+    const periodoFormateado =
+      nombrePeriodo.charAt(0).toUpperCase() + nombrePeriodo.slice(1);
+
+    const totalPagado = gastosPagados.reduce(
+      (acc, gasto) => acc + gasto.monto,
+      0,
+    );
+
+    doc.setFillColor(11, 19, 43);
+    doc.rect(0, 0, 210, 34, "F");
+
+    doc.setTextColor(250, 204, 21);
+    doc.setFontSize(18);
+    doc.text("Cuentas Claras", 14, 15);
+
+    doc.setTextColor(229, 231, 235);
+    doc.setFontSize(11);
+    doc.text("Resumen mensual de gastos", 14, 24);
+
+    doc.setTextColor(31, 41, 55);
+    doc.setFontSize(10);
+    doc.text(`Usuario: ${usuario?.nombre || "Sin usuario"}`, 14, 44);
+    doc.text(`Período: ${periodoFormateado}`, 14, 51);
+    doc.text(`Emitido: ${new Date().toLocaleDateString("es-AR")}`, 14, 58);
+
+    doc.text(
+      `Total pendiente: $${totalPendiente.toLocaleString("es-AR")}`,
+      14,
+      70,
+    );
+    doc.text(`Total pagado: $${totalPagado.toLocaleString("es-AR")}`, 14, 77);
+    autoTable(doc, {
+      startY: 88,
+      head: [["Pendientes", "Vencimiento", "Monto"]],
+      body: gastosPendientes.map((gasto) => [
+        gasto.nombre,
+        gasto.vencimiento?.split("T")[0] || gasto.vencimiento,
+        `$${gasto.monto.toLocaleString("es-AR")}`,
+      ]),
+    });
+
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 12,
+      head: [["Pagados", "Fecha pago", "Monto"]],
+      body: gastosPagados.map((gasto) => [
+        gasto.nombre,
+        gasto.fechaPago?.split("T")[0] || gasto.fechaPago || "-",
+        `$${gasto.monto.toLocaleString("es-AR")}`,
+      ]),
+    });
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text("Reporte generado automáticamente por Cuentas Claras.", 14, 287);
+    doc.save(`gastos-${periodoActivo}.pdf`);
+  };
 
   return (
     <>
@@ -45,9 +107,7 @@ const PanelMensual = ({
           {nombrePeriodo.charAt(0).toUpperCase() + nombrePeriodo.slice(1)}
         </p>
 
-        <p className="calc-amount">
-          ${totalPendiente.toLocaleString("es-AR")}
-        </p>
+        <p className="calc-amount">${totalPendiente.toLocaleString("es-AR")}</p>
 
         <div className="calc-sub">
           {gastosPendientes.length} gasto(s) pendientes
@@ -102,11 +162,27 @@ const PanelMensual = ({
       </div>
 
       <div className="calc-body">
+        <div className="formulario-header">
+          <h2 className="h4 mb-0">
+            {gastoEditando ? "Editar gasto" : "Agregar gasto"}
+          </h2>
+
+          <Button
+            variant="outline-light"
+            size="sm"
+            className="btn-exportar-pdf-desktop"
+            onClick={exportarPDF}
+          >
+            📄 Exportar PDF
+          </Button>
+        </div>
+
         <FormularioGasto
           agregarGasto={agregarGasto}
           editarGasto={editarGasto}
           gastoEditando={gastoEditando}
           cancelarEdicion={cancelarEdicion}
+          ocultarTitulo
         />
 
         <section className="mb-4">
@@ -144,6 +220,16 @@ const PanelMensual = ({
               onAccion={eliminarPagado}
             />
           </div>
+        </div>
+
+        <div className="exportar-pdf-mobile">
+          <Button
+            variant="outline-light"
+            className="w-100"
+            onClick={exportarPDF}
+          >
+            📄 Exportar PDF
+          </Button>
         </div>
       </div>
     </>
