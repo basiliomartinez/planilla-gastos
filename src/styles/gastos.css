@@ -207,13 +207,15 @@
 
 /* ===== FOOTER ===== */
 .footer-principal {
-  background: #0b132b;
-  color: #aaa;
+ background: #212529 !important;
+  color: #cbd5e1;
   text-align: center;
-  padding: 4px 8px;
-  font-size: 11px;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
   margin-top: auto;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
 }
 
 /* ===== PLACEHOLDERS FUTUROS / CUOTAS ===== */
@@ -296,11 +298,10 @@
   }
 
   .footer-principal {
-    font-size: 10px;
-    padding: 3px 6px;
+    font-size: 11px;
+    padding: 8px 6px;
   }
 }
-
 @media (max-width: 576px) {
   .calc-display {
     padding: 18px 14px 16px;
