@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Navbar, Nav, Container, Button } from "react-bootstrap";
+import Logo from "../ui/Logo";
 
 const NavbarPrincipal = ({
   seccionActiva,
@@ -30,17 +31,16 @@ const NavbarPrincipal = ({
     >
       <Container>
         <Navbar.Brand
-          style={{ fontSize: "16px", cursor: "pointer" }}
+          style={{ cursor: "pointer" }}
           onClick={() => navegarA("dashboard")}
         >
-          💰 Cuentas Claras
+          <Logo size={60} />
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="navbar-cuentas-claras" />
 
         <Navbar.Collapse id="navbar-cuentas-claras">
           <Nav className="ms-auto text-center align-items-md-center">
-
             <Nav.Link
               active={seccionActiva === "dashboard"}
               onClick={() => navegarA("dashboard")}
