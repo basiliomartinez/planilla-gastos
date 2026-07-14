@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Form, Container, Alert } from "react-bootstrap";
 import { loginApi, registroApi } from "../../helpers/queries";
+import { LOGO_LOGIN } from "../../config/cloudinary";
 
 const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
   const [modoRegistro, setModoRegistro] = useState(false);
@@ -86,13 +87,37 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
     <div className="app-layout gastos-bg d-flex align-items-center justify-content-center">
       <Container style={{ maxWidth: "420px" }}>
         <div className="calc-card p-4 shadow-lg">
-          <h1 className="text-center text-light mb-2">💰 Cuentas Claras</h1>
+          <div className="text-center mb-4">
+            <img
+              src={LOGO_LOGIN}
+              alt="Logo Cuentas Claras"
+              style={{
+                width: "200px",
+                height: "100px",
+                objectFit: "contain",
+                display: "block",
+                margin: "0 auto 8px",
+              }}
+            />
 
-          <p className="text-center text-secondary mb-4">
-            {modoRegistro
-              ? "Creá tu cuenta para empezar"
-              : "Ingresá para ver tus gastos"}
-          </p>
+            <h1
+              style={{
+                fontSize: "2rem",
+                fontWeight: 700,
+                lineHeight: 1,
+                marginBottom: "4px",
+              }}
+            >
+              <span style={{ color: "#f8fafc" }}>Cuentas </span>
+              <span style={{ color: "#facc15" }}>Claras</span>
+            </h1>
+
+            <p className="text-secondary mb-0">
+              {modoRegistro
+                ? "Creá tu cuenta para empezar"
+                : "Ingresá para ver tus gastos"}
+            </p>
+          </div>
 
           {mensajeSesion && (
             <Alert
@@ -111,6 +136,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
             {modoRegistro && (
               <Form.Group className="mb-3">
                 <Form.Label className="text-light">Nombre</Form.Label>
+
                 <Form.Control
                   type="text"
                   placeholder="Nombre y apellido"
@@ -128,6 +154,7 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
 
             <Form.Group className="mb-3">
               <Form.Label className="text-light">Email</Form.Label>
+
               <Form.Control
                 type="email"
                 placeholder="usuario@test.com"
@@ -166,13 +193,16 @@ const Login = ({ setUsuarioLogueado, mensajeSesion, setMensajeSesion }) => {
                 {password.length > 0 &&
                   password.length < 8 &&
                   "Mínimo 8 caracteres"}
+
                 {password.length >= 8 &&
                   !/[A-Z]/.test(password) &&
                   "Falta una mayúscula"}
+
                 {password.length >= 8 &&
                   /[A-Z]/.test(password) &&
                   !/[0-9]/.test(password) &&
                   "Falta un número"}
+
                 {password.length >= 8 &&
                   /[A-Z]/.test(password) &&
                   /[0-9]/.test(password) &&
