@@ -16,6 +16,7 @@
     "jspdf-autotable": "^5.0.8",
     "react": "^19.2.0",
     "react-bootstrap": "^2.10.10",
+    "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.2.0",
     "recharts": "^3.9.0",
     "sweetalert2": "^11.26.24"
