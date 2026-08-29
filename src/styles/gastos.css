@@ -744,3 +744,57 @@
 .recharts-sector {
   outline: none !important;
 }
+
+.btn-actualizar {
+  position: fixed;
+  right: 20px;
+  bottom: 45px;
+
+  width: 40px;
+  height: 40px;
+
+  border-radius: 50%;
+
+  background: #111827;
+  color: #facc15;
+
+  border: 2px solid rgba(250,204,21,.25);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,.45);
+
+  transition: .2s;
+}
+
+.btn-actualizar:hover{
+    transform:scale(1.06);
+    border-color:#facc15;
+}
+.btn-actualizar:disabled {
+  opacity: 0.9;
+  cursor: default;
+}
+
+@media (max-width: 576px) {
+  .btn-actualizar {
+    right: 16px;
+    bottom: 65px;
+    width: 52px;
+    height: 52px;
+    font-size: 1.3rem;
+  }
+}
+
+.spin {
+  animation: girar 0.8s linear;
+}
+
+@keyframes girar {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
