@@ -253,6 +253,7 @@ const PanelDashboard = ({
                     <Tooltip
                       contentStyle={tooltipStyle}
                       labelStyle={{ color: "#facc15" }}
+                      cursor={false}
                       formatter={(value) =>
                         `$${Number(value).toLocaleString("es-AR")}`
                       }
