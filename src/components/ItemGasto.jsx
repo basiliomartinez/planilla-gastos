@@ -20,20 +20,38 @@ const formatearDiaMes = (fecha) => {
   return fecha;
 };
 
-const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFuturo, }) => {
+const ItemGasto = ({
+  gasto,
+  tipo,
+  onAccion,
+  onEditar,
+  periodoActivo,
+  onMoverAFuturo,
+}) => {
   const esPagado = tipo === "pagado";
+
   const hoyISO = new Date().toISOString().slice(0, 10);
 
   const vencimientoISO = gasto.vencimiento?.includes("T")
     ? gasto.vencimiento.split("T")[0]
     : gasto.vencimiento;
 
-  const esVencido = !esPagado && vencimientoISO < hoyISO;
+  const esVencido =
+    !esPagado &&
+    vencimientoISO &&
+    vencimientoISO < hoyISO;
+
+  const venceHoy =
+    !esPagado &&
+    vencimientoISO &&
+    vencimientoISO === hoyISO;
 
   const periodoVencimiento = vencimientoISO?.slice(0, 7);
 
   const esFueraDePeriodo =
-    !esPagado && periodoActivo && periodoVencimiento !== periodoActivo;
+    !esPagado &&
+    periodoActivo &&
+    periodoVencimiento !== periodoActivo;
 
   return (
     <div className="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -41,7 +59,11 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFut
         <div className="d-flex align-items-center gap-2 flex-wrap">
           <h3
             className={`h6 mb-0 ${
-              esPagado ? "text-success" : esVencido ? "text-danger" : ""
+              esPagado
+                ? "text-success"
+                : esVencido
+                  ? "text-danger"
+                  : ""
             }`}
             style={esPagado ? { textDecoration: "line-through" } : {}}
           >
@@ -49,7 +71,17 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFut
             {gasto.nombre}
           </h3>
 
-          {!esPagado && esVencido && <Badge bg="danger">Vencido</Badge>}
+          {!esPagado && esVencido && (
+            <Badge bg="danger">
+              Vencido
+            </Badge>
+          )}
+
+          {!esPagado && venceHoy && (
+            <Badge bg="warning" text="dark">
+              Vence hoy
+            </Badge>
+          )}
 
           {esFueraDePeriodo && (
             <Badge bg="warning" text="dark">
@@ -61,27 +93,38 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFut
         {!esPagado ? (
           <>
             <small
-              className={esVencido ? "text-danger" : "fecha-vencimiento-normal"}
+              className={
+                esVencido
+                  ? "text-danger"
+                  : venceHoy
+                    ? "text-warning"
+                    : "fecha-vencimiento-normal"
+              }
             >
-              Vence: {formatearDiaMes(gasto.vencimiento)}
+              {esVencido
+                ? "Venció: "
+                : venceHoy
+                  ? "Vence hoy: "
+                  : "Vence: "}
+              {formatearDiaMes(gasto.vencimiento)}
             </small>
 
-         {esFueraDePeriodo && (
-  <>
-    <small className="d-block text-warning">
-      ⚠ Este gasto no corresponde al mes seleccionado.
-    </small>
+            {esFueraDePeriodo && (
+              <>
+                <small className="d-block text-warning">
+                  ⚠ Este gasto no corresponde al mes seleccionado.
+                </small>
 
-    <Button
-      variant="outline-warning"
-      size="sm"
-      className="mt-2"
-      onClick={() => onMoverAFuturo(gasto._id)}
-    >
-      Mover a futuros
-    </Button>
-  </>
-)}
+                <Button
+                  variant="outline-warning"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => onMoverAFuturo(gasto._id)}
+                >
+                  Mover a futuros
+                </Button>
+              </>
+            )}
           </>
         ) : (
           <small className="text-success">
@@ -92,24 +135,39 @@ const ItemGasto = ({ gasto, tipo, onAccion, onEditar, periodoActivo, onMoverAFut
 
       <div className="d-flex align-items-center gap-2">
         <strong
-          className={esPagado ? "text-success" : esVencido ? "text-danger" : ""}
+          className={
+            esPagado
+              ? "text-success"
+              : esVencido
+                ? "text-danger"
+                : ""
+          }
         >
           ${gasto.monto.toLocaleString("es-AR")}
         </strong>
 
         {!esPagado ? (
           <>
-            <Button variant="outline-warning" onClick={() => onEditar(gasto)}>
+            <Button
+              variant="outline-warning"
+              onClick={() => onEditar(gasto)}
+            >
               Editar
             </Button>
 
-            <Button variant="danger" onClick={() => onAccion(gasto._id)}>
+            <Button
+              variant="danger"
+              onClick={() => onAccion(gasto._id)}
+            >
               A pagar
             </Button>
           </>
         ) : (
           <>
-            <Badge bg="success">Pagado</Badge>
+            <Badge bg="success">
+              Pagado
+            </Badge>
+
             <Button
               variant="outline-danger"
               onClick={() => onAccion(gasto._id)}

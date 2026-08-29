@@ -14,6 +14,29 @@ const formatearFecha = (fecha) => {
   return `${dia}/${mes}/${anio}`;
 };
 
+const formatearPeriodo = (periodo) => {
+  if (!periodo) return "";
+
+  const [anio, mes] = periodo.split("-");
+
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+
+  return `${meses[Number(mes) - 1]} ${anio}`;
+};
+
 const calcularDiasRestantes = (fecha) => {
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
@@ -29,19 +52,18 @@ const calcularDiasRestantes = (fecha) => {
 const PanelVencimientos = ({ gastos, marcarComoPagado }) => {
   const gastosPendientes = gastos
     .filter((gasto) => gasto.estado === "pendiente")
-    .sort(
-      (a, b) =>
-        normalizarFecha(a.vencimiento).localeCompare(
-          normalizarFecha(b.vencimiento)
-        )
+    .sort((a, b) =>
+      normalizarFecha(a.vencimiento).localeCompare(
+        normalizarFecha(b.vencimiento),
+      ),
     );
 
   const gastosVencidos = gastosPendientes.filter(
-    (gasto) => calcularDiasRestantes(gasto.vencimiento) < 0
+    (gasto) => calcularDiasRestantes(gasto.vencimiento) < 0,
   );
 
   const gastosHoy = gastosPendientes.filter(
-    (gasto) => calcularDiasRestantes(gasto.vencimiento) === 0
+    (gasto) => calcularDiasRestantes(gasto.vencimiento) === 0,
   );
 
   const gastosProximos = gastosPendientes.filter((gasto) => {
@@ -49,10 +71,11 @@ const PanelVencimientos = ({ gastos, marcarComoPagado }) => {
     return dias > 0 && dias <= 7;
   });
 
-  const totalCritico = [...gastosVencidos, ...gastosHoy, ...gastosProximos].reduce(
-    (acc, gasto) => acc + gasto.monto,
-    0
-  );
+  const totalCritico = [
+    ...gastosVencidos,
+    ...gastosHoy,
+    ...gastosProximos,
+  ].reduce((acc, gasto) => acc + gasto.monto, 0);
 
   const renderGasto = (gasto) => {
     const dias = calcularDiasRestantes(gasto.vencimiento);
@@ -64,7 +87,11 @@ const PanelVencimientos = ({ gastos, marcarComoPagado }) => {
     }
 
     if (dias === 0) {
-      badge = <Badge bg="warning" text="dark">Vence hoy</Badge>;
+      badge = (
+        <Badge bg="warning" text="dark">
+          Vence hoy
+        </Badge>
+      );
     }
 
     if (dias > 0) {
@@ -83,7 +110,16 @@ const PanelVencimientos = ({ gastos, marcarComoPagado }) => {
           </div>
 
           <small className="fecha-vencimiento-normal">
-            Vence: {formatearFecha(gasto.vencimiento)}
+            {gasto.periodo && (
+              <>
+                <strong>Período:</strong> {formatearPeriodo(gasto.periodo)}
+                <br />
+              </>
+            )}
+            <strong>
+              {dias < 0 ? "Venció:" : dias === 0 ? "Vence hoy:" : "Vence:"}
+            </strong>{" "}
+            {formatearFecha(gasto.vencimiento)}
           </small>
         </div>
 
@@ -110,7 +146,8 @@ const PanelVencimientos = ({ gastos, marcarComoPagado }) => {
         </p>
 
         <div className="calc-sub">
-          {gastosVencidos.length + gastosHoy.length + gastosProximos.length} vencimiento(s) críticos
+          {gastosVencidos.length + gastosHoy.length + gastosProximos.length}{" "}
+          vencimiento(s) críticos
         </div>
       </div>
 
