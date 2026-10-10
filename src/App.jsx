@@ -12,6 +12,7 @@ import ResumenCards from "./components/dashboard/ResumenCards";
 import PanelHistorial from "./components/historial/PanelHistorial";
 import PanelVencimientos from "./components/vencimientos/PanelVencimientos";
 import PanelDashboard from "./components/dashboard/PanelDashboard";
+import { ArrowRepeat } from "react-bootstrap-icons";
 
 import {
   listarGastosApi,
@@ -53,50 +54,59 @@ const App = () => {
 
   const [alertaVencidosMostrada, setAlertaVencidosMostrada] = useState(false);
 
+  const [actualizando, setActualizando] = useState(false);
+
   // ==========================================
   // CARGA DE DATOS
   // ==========================================
+const cargarDatos = async () => {
+  if (!usuarioLogueado?.token) return;
 
-  useEffect(() => {
-    if (!usuarioLogueado?.token) return;
+  setCargando(true);
 
-    const cargarDatos = async () => {
-      setCargando(true);
+  try {
+    const mensuales = await listarGastosApi("mensual", periodoActivo);
 
-      try {
-        const mensuales = await listarGastosApi("mensual", periodoActivo);
+    const todosMensuales = await listarGastosApi("mensual");
 
-        // Todos los gastos mensuales, sin filtrar por período.
-        // Se usan para vencimientos globales.
-        const todosMensuales = await listarGastosApi("mensual");
+    const futuros = await listarGastosApi("futuro");
 
-        const futuros = await listarGastosApi("futuro");
-        const cuotasData = await listarCuotasApi();
+    const cuotasData = await listarCuotasApi();
 
-        const pendientes = mensuales.filter(
-          (gasto) => gasto.estado === "pendiente",
-        );
+    const pendientes = mensuales.filter(
+      (gasto) => gasto.estado === "pendiente",
+    );
 
-        const pagados = mensuales.filter(
-          (gasto) => gasto.estado === "pagado",
-        );
+    const pagados = mensuales.filter(
+      (gasto) => gasto.estado === "pagado",
+    );
 
-        setGastosPendientes(pendientes);
-        setGastosPagados(pagados);
+    setGastosPendientes(pendientes);
+    setGastosPagados(pagados);
+    setTodosLosGastosMensuales(todosMensuales);
+    setGastosFuturos(futuros);
+    setCuotas(cuotasData);
+  } catch (error) {
+    console.error("Error al cargar datos:", error);
+  } finally {
+    setCargando(false);
+  }
+};
 
-        setTodosLosGastosMensuales(todosMensuales);
+const actualizarInformacion = async () => {
+  setActualizando(true);
 
-        setGastosFuturos(futuros);
-        setCuotas(cuotasData);
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-      } finally {
-        setCargando(false);
-      }
-    };
+  await cargarDatos();
 
-    cargarDatos();
-  }, [usuarioLogueado, periodoActivo]);
+  setTimeout(() => {
+    setActualizando(false);
+  }, 800);
+};
+
+
+useEffect(() => {
+  cargarDatos();
+}, [usuarioLogueado, periodoActivo]);
 
   // ==========================================
   // ALERTA GLOBAL DE VENCIMIENTOS
@@ -996,6 +1006,17 @@ const App = () => {
           </div>
         </Container>
       </main>
+<button
+  className="btn-actualizar"
+  onClick={actualizarInformacion}
+  disabled={actualizando}
+>
+  <ArrowRepeat
+    size={24}
+    className={actualizando ? "spin" : ""}
+  />
+</button>
+
 
       <FooterPrincipal />
     </div>
